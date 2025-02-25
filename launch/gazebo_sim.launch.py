@@ -13,9 +13,6 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
-
-  
-
     package_name_description='arcs_cohort_description' 
 
     rsp = IncludeLaunchDescription(
@@ -52,7 +49,6 @@ def generate_launch_description():
                                    '-name', 'my_bot',
                                    '-z', '0.1'],
                         output='screen')
-
 
 
     return LaunchDescription([
