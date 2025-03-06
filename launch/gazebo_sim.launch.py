@@ -50,6 +50,22 @@ def generate_launch_description():
         default_value=default_model_path,
         description='Relative path to the robot model file'
     )
+    declare_robot_name_cmd = DeclareLaunchArgument(
+        'robot_name',
+        default_value='',
+        description=(
+            'Name of the robot (specifying this will add the '
+            'robot name prefix to joints, links, etc. in the robot model).')
+    )
+    # NOTE: Removing the namespace parameter from the Gazebo launcher for now
+    # due to double-namespacing issue when launcher is called from an upstream
+    # launcher.
+    #
+    # declare_namespace_cmd = DeclareLaunchArgument(
+    #     "namespace",
+    #     default_value="",
+    #     description="Namespace under which to bring up nodes, topics, etc."
+    # )
     declare_use_rsp_cmd = DeclareLaunchArgument(
         'use_rsp',
         default_value='true',
@@ -71,27 +87,43 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     model_package = LaunchConfiguration('model_package')
     model_file = LaunchConfiguration('model_file')
+    robot_name = LaunchConfiguration('robot_name')
+    # namespace = LaunchConfiguration("namespace")
     use_rsp = LaunchConfiguration('use_rsp')
     use_jsp = LaunchConfiguration('use_jsp')
     use_jsp_gui = LaunchConfiguration('use_jsp_gui')
 
-    # Robot description
-    robot_description_content = Command([
-        'xacro ',
-        PathJoinSubstitution([
-            FindPackageShare(model_package),
-            model_file
-        ]),
-        ' use_sim_time:=', use_sim_time
-    ])
-    robot_description = {'robot_description': robot_description_content}
+    # Compute the robot prefix only if a robot name is provided
+    # This expression will evaluate to, for example, "cohort_" if
+    # robot_name is "cohort", or to an empty string if robot_name is empty.
+    robot_prefix = PythonExpression(
+        ["'", robot_name, "_' if '", robot_name, "' else ''"]
+    )
+    # Compute the prefix argument only if a robot_name/robot_prefix is provided.
+    # This expression will evaluate to, for example, "prefix:=cohort_" if
+    # robot_prefix is "cohort_", or to an empty string if robot_prefix is empty.
+    robot_prefix_arg = PythonExpression(
+        ["('prefix:=' + '", robot_prefix, "') if '", robot_prefix, "' else ''"]
+    )
+
+    # Robot description from Xacro, including the conditional robot name prefix.
+    robot_description = Command(
+        [
+            "xacro ",
+            PathJoinSubstitution([FindPackageShare(model_package), model_file]),
+            " ",
+            robot_prefix_arg,
+        ]
+    )
 
     # Robot State Publisher node
     rsp_node = Node(
         condition=IfCondition(use_rsp),
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        parameters=[robot_description, {'use_sim_time': use_sim_time}],
+        parameters=[
+            {"robot_description": robot_description, "use_sim_time": use_sim_time}
+        ],
         output='screen'
     )
 
@@ -176,20 +208,26 @@ def generate_launch_description():
         output='screen'
     )
 
-    return LaunchDescription([
-        declare_world_cmd,
-        declare_use_sim_time_cmd,
-        declare_model_package_cmd,
-        declare_model_file_cmd,
-        declare_use_rsp_cmd,
-        declare_use_jsp_cmd,
-        declare_use_jsp_gui_cmd,
-        rsp_node,
-        jsp_node,
-        jsp_gui_node,
-        gazebo_launch,
-        spawn_entity,
-        start_gazebo_ros_bridge,
-        ros_gz_image_bridge_left,
-        ros_gz_image_bridge_right,
-    ])
+    return LaunchDescription(
+        [
+            # Declare launch arguments
+            declare_world_cmd,
+            declare_use_sim_time_cmd,
+            declare_model_package_cmd,
+            declare_model_file_cmd,
+            declare_robot_name_cmd,
+            # declare_namespace_cmd,
+            declare_use_rsp_cmd,
+            declare_use_jsp_cmd,
+            declare_use_jsp_gui_cmd,
+            # Nodes
+            rsp_node,
+            jsp_node,
+            jsp_gui_node,
+            gazebo_launch,
+            spawn_entity,
+            start_gazebo_ros_bridge,
+            ros_gz_image_bridge_left,
+            ros_gz_image_bridge_right,
+        ]
+    )
