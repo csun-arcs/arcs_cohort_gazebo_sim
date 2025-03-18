@@ -64,7 +64,7 @@ def generate_launch_description():
     # declare_namespace_cmd = DeclareLaunchArgument(
     #     "namespace",
     #     default_value="",
-    #     description="Namespace under which to bring up nodes, topics, etc."
+    #     description="Namespace under which to bring up camera image bridges."
     # )
     declare_use_rsp_cmd = DeclareLaunchArgument(
         'use_rsp',
@@ -187,25 +187,59 @@ def generate_launch_description():
 
     # Start the Gazebo ROS bridge
     start_gazebo_ros_bridge = Node(
+        name="parameter_bridge",
         package='ros_gz_bridge',
         executable='parameter_bridge',
         parameters=[{'config_file': bridge_params}],
         output='screen'
     )
 
-    # Image bridges for cameras
+    # Image bridge for left camera image
     ros_gz_image_bridge_left = Node(
+        name="left_camera_image_bridge",
         package='ros_gz_image',
         executable='image_bridge',
-        arguments=['/camera/left_camera_image_raw'],
-        output='screen'
+        arguments=['camera/left_camera/image'],
+        output='screen',
+        remappings=[
+            ('camera/left_camera/image', 'camera/left_camera/image'),
+            ('camera/left_camera/image/compressed', 'camera/left_camera/image/compressed'),
+            ('camera/left_camera/image/compressedDepth', 'camera/left_camera/image/compressedDepth'),
+            ('camera/left_camera/image/theora', 'camera/left_camera/image/theora'),
+            ('camera/left_camera/image/zstd', 'camera/left_camera/image/zstd'),
+        ]
     )
 
+    # Image bridge for right camera image
     ros_gz_image_bridge_right = Node(
+        name="right_camera_image_bridge",
         package='ros_gz_image',
         executable='image_bridge',
-        arguments=['/camera/right_camera_image_raw'],
-        output='screen'
+        arguments=['camera/right_camera/image'],
+        output='screen',
+        remappings=[
+            ('camera/right_camera/image', 'camera/right_camera/image'),
+            ('camera/right_camera/image/compressed', 'camera/right_camera/image/compressed'),
+            ('camera/right_camera/image/compressedDepth', 'camera/right_camera/image/compressedDepth'),
+            ('camera/right_camera/image/theora', 'camera/right_camera/image/theora'),
+            ('camera/right_camera/image/zstd', 'camera/right_camera/image/zstd'),
+        ]
+    )
+
+    # Image bridge for left camera depth image
+    ros_gz_image_bridge_depth = Node(
+        name="left_camera_depth_image_bridge",
+        package='ros_gz_image',
+        executable='image_bridge',
+        arguments=['camera/left_camera/depth_image'],
+        output='screen',
+        remappings=[
+            ('camera/left_camera/depth_image', 'camera/left_camera/depth_image'),
+            ('camera/left_camera/depth_image/compressed', 'camera/left_camera/depth_image/compressed'),
+            ('camera/left_camera/depth_image/compressedDepth', 'camera/left_camera/depth_image/compressedDepth'),
+            ('camera/left_camera/depth_image/theora', 'camera/left_camera/depth_image/theora'),
+            ('camera/left_camera/depth_image/zstd', 'camera/left_camera/depth_image/zstd'),
+        ]
     )
 
     return LaunchDescription(
@@ -229,5 +263,6 @@ def generate_launch_description():
             start_gazebo_ros_bridge,
             ros_gz_image_bridge_left,
             ros_gz_image_bridge_right,
+            ros_gz_image_bridge_depth,
         ]
     )

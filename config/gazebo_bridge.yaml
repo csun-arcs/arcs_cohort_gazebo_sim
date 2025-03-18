@@ -40,28 +40,43 @@
   gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS
 
-# Bridge camera info and images for left camera
-- ros_topic_name: "camera/left/camera_info"
-  gz_topic_name: "camera/left_camera_info"
+#
+# NOTE: We're taking care of the image briding via 'ros_gz_image/image_bridge'
+# nodes in 'gazebo_sim.launch.py', but they could also be bridged via
+# 'ros_gz_bridge/parameter_bridge' as specified via this config file as a
+# backup.
+#
+# Bridge left camera camera_info
+- ros_topic_name: "camera/left_camera/camera_info"
+  gz_topic_name: "camera/left_camera/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: "gz.msgs.CameraInfo"
   direction: GZ_TO_ROS
 
-- ros_topic_name: "camera/left/image_raw"
-  gz_topic_name: "camera/left_camera_image_raw"
-  ros_type_name: "sensor_msgs/msg/Image"
-  gz_type_name: "gz.msgs.Image"
-  direction: GZ_TO_ROS
+# Bridge left camera image
+# - ros_topic_name: "camera/left_camera/image_raw"
+#   gz_topic_name: "camera/left_camera/image"
+#   ros_type_name: "sensor_msgs/msg/Image"
+#   gz_type_name: "gz.msgs.Image"
+#   direction: GZ_TO_ROS
 
-# Bridge camera info and images for right camera
-- ros_topic_name: "camera/right/camera_info"
-  gz_topic_name: "camera/right_camera_info"
+# Bridge camera info for right camera
+- ros_topic_name: "camera/right_camera/camera_info"
+  gz_topic_name: "camera/right_camera/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: "gz.msgs.CameraInfo"
   direction: GZ_TO_ROS
 
-- ros_topic_name: "camera/right/image_raw"
-  gz_topic_name: "camera/right_camera_image_raw"
-  ros_type_name: "sensor_msgs/msg/Image"
-  gz_type_name: "gz.msgs.Image"
+# Bridge right camera image
+# - ros_topic_name: "camera/right_camera/image_raw"
+#   gz_topic_name: "camera/right_camera/image_raw"
+#   ros_type_name: "sensor_msgs/msg/Image"
+#   gz_type_name: "gz.msgs.Image"
+#   direction: GZ_TO_ROS
+
+# Bridge left RGBD camera point cloud
+- ros_topic_name: "camera/left_camera/points"
+  gz_topic_name: "camera/left_camera/points"
+  ros_type_name: "sensor_msgs/msg/PointCloud2"
+  gz_type_name: "gz.msgs.PointCloudPacked"
   direction: GZ_TO_ROS
