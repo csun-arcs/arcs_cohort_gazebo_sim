@@ -57,6 +57,14 @@ def generate_launch_description():
             'Name of the robot (specifying this will add the '
             'robot name prefix to joints, links, etc. in the robot model).')
     )
+    declare_camera_resolution_cmd = DeclareLaunchArgument(
+        'camera_resolution',
+        default_value='VGA',
+        description=(
+            'Resolution profile of the simulated Stereolabs Zed camera.'
+            'Options: "HD2K" (2208x1242), "HD1080" (1920x1080), '
+            '"HD720" (1280x720) or "VGA" (672x376).')
+    )
     # NOTE: Removing the namespace parameter from the Gazebo launcher for now
     # due to double-namespacing issue when launcher is called from an upstream
     # launcher.
@@ -88,6 +96,7 @@ def generate_launch_description():
     model_package = LaunchConfiguration('model_package')
     model_file = LaunchConfiguration('model_file')
     robot_name = LaunchConfiguration('robot_name')
+    camera_resolution = LaunchConfiguration('camera_resolution')
     # namespace = LaunchConfiguration("namespace")
     use_rsp = LaunchConfiguration('use_rsp')
     use_jsp = LaunchConfiguration('use_jsp')
@@ -113,6 +122,9 @@ def generate_launch_description():
             PathJoinSubstitution([FindPackageShare(model_package), model_file]),
             " ",
             robot_prefix_arg,
+            " ",
+            "camera_resolution:=",
+            camera_resolution,
         ]
     )
 
@@ -216,6 +228,7 @@ def generate_launch_description():
             declare_model_package_cmd,
             declare_model_file_cmd,
             declare_robot_name_cmd,
+            declare_camera_resolution_cmd,
             # declare_namespace_cmd,
             declare_use_rsp_cmd,
             declare_use_jsp_cmd,
