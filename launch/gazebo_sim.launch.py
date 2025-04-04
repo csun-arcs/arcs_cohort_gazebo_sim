@@ -89,6 +89,11 @@ def generate_launch_description():
         default_value="false",
         description="If true, include the lidar in the robot description",
     )
+    declare_lidar_update_rate_cmd = DeclareLaunchArgument(
+        "lidar_update_rate",
+        default_value="30",
+        description="Set the update rate of the LiDAR sensor.",
+    )
 
     # Launch configurations
     world = LaunchConfiguration("world")
@@ -102,6 +107,7 @@ def generate_launch_description():
     use_jsp = LaunchConfiguration("use_jsp")
     use_jsp_gui = LaunchConfiguration("use_jsp_gui")
     use_lidar = LaunchConfiguration("use_lidar")
+    lidar_update_rate = LaunchConfiguration("lidar_update_rate")
 
     # Compute the robot prefix only if a robot name is provided
     # This expression will evaluate to, for example, "cohort_" if
@@ -128,6 +134,8 @@ def generate_launch_description():
             camera_resolution,
             " use_lidar:=",
             use_lidar,
+            " lidar_update_rate:=",
+            lidar_update_rate,
         ]
     )
 
@@ -291,6 +299,7 @@ def generate_launch_description():
             declare_use_jsp_cmd,
             declare_use_jsp_gui_cmd,
             declare_use_lidar_cmd,
+            declare_lidar_update_rate_cmd,
             # Nodes
             rsp_node,
             jsp_node,
