@@ -48,7 +48,7 @@
   direction: GZ_TO_ROS
 
 #
-# NOTE: We're taking care of the image briding via 'ros_gz_image/image_bridge'
+# NOTE: We're taking care of the image bridging via 'ros_gz_image/image_bridge'
 # nodes in 'gazebo_sim.launch.py', but they could also be bridged via
 # 'ros_gz_bridge/parameter_bridge' as specified via this config file as a
 # backup.
