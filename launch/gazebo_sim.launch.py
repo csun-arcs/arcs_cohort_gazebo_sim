@@ -24,7 +24,9 @@ def generate_launch_description():
 
     # Paths
     default_world_path = os.path.join(
-        get_package_share_directory(pkg_gazebo_sim), "worlds", "empty.world"
+        get_package_share_directory(pkg_gazebo_sim),
+        "worlds",
+        "test_obstacles_world_1.world",
     )
     default_model_path = "description/robot.urdf.xacro"
 
@@ -89,6 +91,11 @@ def generate_launch_description():
         default_value="false",
         description="If true, include the lidar in the robot description",
     )
+    declare_use_ros2_control_cmd = DeclareLaunchArgument(
+        "use_ros2_control",
+        default_value="false",
+        description="Use ROS2 Control for the robot",
+    )
 
     # Launch configurations
     world = LaunchConfiguration("world")
@@ -102,6 +109,7 @@ def generate_launch_description():
     use_jsp = LaunchConfiguration("use_jsp")
     use_jsp_gui = LaunchConfiguration("use_jsp_gui")
     use_lidar = LaunchConfiguration("use_lidar")
+    use_ros2_control = LaunchConfiguration("use_ros2_control")
 
     # Compute the robot prefix only if a robot name is provided
     # This expression will evaluate to, for example, "cohort_" if
@@ -128,6 +136,8 @@ def generate_launch_description():
             camera_resolution,
             " use_lidar:=",
             use_lidar,
+            " use_ros2_control:=",
+            use_ros2_control,
         ]
     )
 
@@ -166,6 +176,16 @@ def generate_launch_description():
         output="screen",
     )
 
+    # Teleop keyboard node
+    teleop_keyboard = Node(
+        condition=IfCondition(use_ros2_control),
+        package="teleop_twist_keyboard",
+        executable="teleop_twist_keyboard",
+        prefix="xterm -e",
+        parameters=[{"stamped": True}],
+        remappings=[("cmd_vel", "/diff_cont/cmd_vel")],
+    )
+
     # Gazebo launch
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -189,6 +209,22 @@ def generate_launch_description():
         executable="create",
         arguments=["-topic", "robot_description", "-name", "cohort", "-z", "0.1"],
         output="screen",
+    )
+
+    # Differential drive controller spawner
+    diff_drive_spawner = Node(
+        condition=IfCondition(use_ros2_control),
+        package="controller_manager",
+        executable="spawner",
+        arguments=["diff_cont"],
+    )
+
+    # Joint state broadcaster spawner
+    joint_broad_spawner = Node(
+        condition=IfCondition(use_ros2_control),
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_broad"],
     )
 
     # Gazebo bridge parameters
@@ -291,12 +327,16 @@ def generate_launch_description():
             declare_use_jsp_cmd,
             declare_use_jsp_gui_cmd,
             declare_use_lidar_cmd,
+            declare_use_ros2_control_cmd,
             # Nodes
             rsp_node,
             jsp_node,
             jsp_gui_node,
+            teleop_keyboard,
             gazebo_launch,
             spawn_entity,
+            diff_drive_spawner,
+            joint_broad_spawner,
             start_gazebo_ros_bridge,
             ros_gz_image_bridge_left,
             ros_gz_image_bridge_right,
