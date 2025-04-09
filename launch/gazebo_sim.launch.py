@@ -207,39 +207,9 @@ def generate_launch_description():
         parameters=[default_joystick_params],
     )
 
-    # Joystick teleop for diff drive plugin
-    joy_teleop_diff_drive_plugin = Node(
-        condition=IfCondition(
-            PythonExpression(
-                [
-                    "'",
-                    use_ros2_control,
-                    "' == 'false' and '",
-                    use_joystick,
-                    "' == 'true'",
-                ]
-            )
-        ),
-        package="teleop_twist_joy",
-        executable="teleop_node",
-        name="teleop_node",
-        parameters=[default_joystick_params, {"use_sim_time": use_sim_time}],
-        remappings=[("/cmd_vel", "/diff_cont/cmd_vel_unstamped")],
-    )
-
-    # Joystick teleop for ros2 control plugin
-    joy_teleop_ros2_control_plugin = Node(
-        condition=IfCondition(
-            PythonExpression(
-                [
-                    "'",
-                    use_ros2_control,
-                    "' == 'true' and '",
-                    use_joystick,
-                    "' == 'true'",
-                ]
-            )
-        ),
+    # Teleop with joystick
+    joy_teleop = Node(
+        condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'true'"])),
         package="teleop_twist_joy",
         executable="teleop_node",
         name="teleop_node",
@@ -269,43 +239,27 @@ def generate_launch_description():
         ],
     )
 
-    # Teleop keyboard for diff drive plugin
-    teleop_keyboard_diff_drive_plugin = Node(
-        condition=IfCondition(
-            PythonExpression(
-                [
-                    "'",
-                    use_ros2_control,
-                    "' == 'false' and '",
-                    use_joystick,
-                    "' == 'false'",
-                ]
-            )
-        ),
+    # Teleop with keyboard
+    teleop_keyboard = Node(
+        condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'false'"])),
         package="teleop_twist_keyboard",
         executable="teleop_twist_keyboard",
         prefix="xterm -e",
-        remappings=[("/cmd_vel", "/diff_cont/cmd_vel_unstamped")],
-    )
-
-    # Teleop keyboard for ros2 control plugin
-    teleop_keyboard_ros2_control_plugin = Node(
-        condition=IfCondition(
-            PythonExpression(
-                [
-                    "'",
-                    use_ros2_control,
-                    "' == 'true' and '",
-                    use_joystick,
-                    "' == 'false'",
-                ]
+        parameters=[
+            {"stamped": PythonExpression(["'", use_ros2_control, "' == 'true'"])}
+        ],
+        remappings=[
+            (
+                "/cmd_vel",
+                PythonExpression(
+                    [
+                        "'/diff_cont/cmd_vel' if '",
+                        use_ros2_control,
+                        "' == 'true' else '/diff_cont/cmd_vel_unstamped'",
+                    ]
+                ),
             )
-        ),
-        package="teleop_twist_keyboard",
-        executable="teleop_twist_keyboard",
-        prefix="xterm -e",
-        parameters=[{"stamped": True}],
-        remappings=[("/cmd_vel", "/diff_cont/cmd_vel")],
+        ],
     )
 
     # Twist unstamper for keyboard to pass into twist mux for Nav2 waypoint navigation
@@ -478,15 +432,11 @@ def generate_launch_description():
             rsp_node,
             jsp_node,
             jsp_gui_node,
-            teleop_keyboard_diff_drive_plugin,
-            teleop_keyboard_ros2_control_plugin,
+            teleop_keyboard,
             joy_node,
-            joy_teleop_diff_drive_plugin,
-            joy_teleop_ros2_control_plugin,
+            joy_teleop,
             joy_ros2_control_twist_stamper,
             teleop_keyboard_unstamper,
-            # twist_stamper,
-            # twist_unstamper,
             gazebo_launch,
             spawn_entity,
             diff_drive_spawner,
