@@ -192,7 +192,29 @@ def generate_launch_description():
         executable="teleop_twist_keyboard",
         prefix="xterm -e",
         parameters=[{"stamped": True}],
-        remappings=[("cmd_vel", "/diff_cont/cmd_vel")],
+        remappings=[("/cmd_vel", "/diff_cont/cmd_vel")],
+    )
+
+    # twist_stamper = Node(
+    #     condition=IfCondition(use_ros2_control),
+    #     package="twist_stamper",
+    #     executable="twist_stamper",
+    #     parameters=[{"use_sim_time": use_sim_time}],
+    #     remappings=[
+    #         ("/cmd_vel_in", "/diff_cont/cmd_vel_unstamped"),
+    #         ("/cmd_vel_out", "/diff_cont/cmd_vel_stamped"),
+    #     ],
+    # )
+
+    twist_unstamper = Node(
+        condition=IfCondition(use_ros2_control),
+        package="twist_stamper",
+        executable="twist_unstamper",
+        parameters=[{"use_sim_time": use_sim_time}],
+        remappings=[
+            ("/cmd_vel_in", "/diff_cont/cmd_vel"),
+            ("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped"),
+        ],
     )
 
     # Gazebo launch
@@ -343,6 +365,8 @@ def generate_launch_description():
             jsp_node,
             jsp_gui_node,
             teleop_keyboard,
+            # twist_stamper,
+            twist_unstamper,
             gazebo_launch,
             spawn_entity,
             diff_drive_spawner,
