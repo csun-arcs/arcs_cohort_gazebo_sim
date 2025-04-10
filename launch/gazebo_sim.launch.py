@@ -6,6 +6,7 @@ from launch.actions import (
     IncludeLaunchDescription,
 )
 from launch.conditions import IfCondition
+from launch.conditions import UnlessCondition
 
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
@@ -22,6 +23,7 @@ def generate_launch_description():
     # Package names
     pkg_gazebo_sim = "arcs_cohort_gazebo_sim"
     pkg_description = "arcs_cohort_description"
+    pkg_nav = "arcs_cohort_navigation"
 
     # Paths
     default_world_path = os.path.join(
@@ -30,6 +32,14 @@ def generate_launch_description():
         "test_obstacles_world_1.world",
     )
     default_model_path = "description/robot.urdf.xacro"
+    default_joystick_params_path = os.path.join(
+        get_package_share_directory(pkg_gazebo_sim),
+        "config",
+        "gazebo_joystick_teleop.yaml",
+    )
+    default_twist_mux_params_path = os.path.join(
+        get_package_share_directory(pkg_nav), "config", "twist_mux.yaml"
+    )
 
     # Declare launch arguments
     declare_world_cmd = DeclareLaunchArgument(
@@ -102,6 +112,16 @@ def generate_launch_description():
         default_value="false",
         description="Use ROS2 Control for the robot",
     )
+    declare_use_joystick_cmd = DeclareLaunchArgument(
+        "use_joystick",
+        default_value="false",
+        description="Use joystick to control the robot",
+    )
+    declare_use_navigation_cmd = DeclareLaunchArgument(
+        "use_navigation",
+        default_value="false",
+        description="Set the argument to true if you want to launch twist mux",
+    )
 
     # Launch configurations
     world = LaunchConfiguration("world")
@@ -117,6 +137,8 @@ def generate_launch_description():
     use_lidar = LaunchConfiguration("use_lidar")
     lidar_update_rate = LaunchConfiguration("lidar_update_rate")
     use_ros2_control = LaunchConfiguration("use_ros2_control")
+    use_joystick = LaunchConfiguration("use_joystick")
+    use_navigation = LaunchConfiguration("use_navigation")
 
     # Compute the robot prefix only if a robot name is provided
     # This expression will evaluate to, for example, "cohort_" if
@@ -147,6 +169,8 @@ def generate_launch_description():
             lidar_update_rate,
             " use_ros2_control:=",
             use_ros2_control,
+            " use_joystick:=",
+            use_joystick,
         ]
     )
 
@@ -185,35 +209,148 @@ def generate_launch_description():
         output="screen",
     )
 
-    # Teleop keyboard node
+    # Twist Mux when using ros2 control plugin
+    twist_mux_ros2_control_node = Node(
+        condition=IfCondition(
+            PythonExpression(
+                [
+                    "'",
+                    use_navigation,
+                    "' == 'true' and '",
+                    use_ros2_control,
+                    "' == 'true'",
+                ]
+            )
+        ),
+        package="twist_mux",
+        executable="twist_mux",
+        parameters=[default_twist_mux_params_path, {"use_sim_time": use_sim_time}],
+        remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_nav")],
+    )
+
+    # Twist Mux when using differential drive plugin
+    twist_mux_normal_node = Node(
+        condition=IfCondition(
+            PythonExpression(
+                [
+                    "'",
+                    use_navigation,
+                    "' == 'true' and '",
+                    use_ros2_control,
+                    "' == 'false'",
+                ]
+            )
+        ),
+        package="twist_mux",
+        executable="twist_mux",
+        parameters=[default_twist_mux_params_path, {"use_sim_time": use_sim_time}],
+        remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped")],
+    )
+
+    # Jostick Node
+    joy_node = Node(
+        condition=IfCondition(use_joystick),
+        package="joy",
+        executable="joy_node",
+        parameters=[default_joystick_params_path],
+    )
+
+    # Teleop with joystick
+    teleop_joy = Node(
+        condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'true'"])),
+        package="teleop_twist_joy",
+        executable="teleop_node",
+        name="teleop_node",
+        parameters=[default_joystick_params_path, {"use_sim_time": use_sim_time}],
+        remappings=[("/cmd_vel", "/diff_cont/cmd_vel_unstamped")],
+    )
+
+    # Twist stamper for joystick teleop node when ros2 control plugin is enabled
+    teleop_joy_stamper = Node(
+        condition=IfCondition(
+            PythonExpression(
+                [
+                    "'",
+                    use_ros2_control,
+                    "' == 'true' and '",
+                    use_joystick,
+                    "' == 'true'",
+                ]
+            )
+        ),
+        package="twist_stamper",
+        executable="twist_stamper",
+        parameters=[{"use_sim_time": use_sim_time}],
+        remappings=[
+            ("/cmd_vel_in", "/diff_cont/cmd_vel_unstamped"),
+            ("/cmd_vel_out", "/diff_cont/cmd_vel"),
+        ],
+    )
+
+    # Teleop with keyboard
     teleop_keyboard = Node(
-        condition=IfCondition(use_ros2_control),
+        condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'false'"])),
         package="teleop_twist_keyboard",
         executable="teleop_twist_keyboard",
         prefix="xterm -e",
-        parameters=[{"stamped": True}],
-        remappings=[("/cmd_vel", "/diff_cont/cmd_vel")],
+        parameters=[
+            {"stamped": PythonExpression(["'", use_ros2_control, "' == 'true'"])}
+        ],
+        remappings=[
+            (
+                "/cmd_vel",
+                PythonExpression(
+                    [
+                        "'/diff_cont/cmd_vel' if '",
+                        use_ros2_control,
+                        "' == 'true' else '/diff_cont/cmd_vel_unstamped'",
+                    ]
+                ),
+            )
+        ],
     )
 
-    # twist_stamper = Node(
-    #     condition=IfCondition(use_ros2_control),
-    #     package="twist_stamper",
-    #     executable="twist_stamper",
-    #     parameters=[{"use_sim_time": use_sim_time}],
-    #     remappings=[
-    #         ("/cmd_vel_in", "/diff_cont/cmd_vel_unstamped"),
-    #         ("/cmd_vel_out", "/diff_cont/cmd_vel_stamped"),
-    #     ],
-    # )
-
-    twist_unstamper = Node(
-        condition=IfCondition(use_ros2_control),
+    # Twist unstamper for keyboard to pass into twist mux for Nav2 waypoint navigation
+    teleop_keyboard_unstamper = Node(
+        condition=IfCondition(
+            PythonExpression(
+                [
+                    "'",
+                    use_ros2_control,
+                    "' == 'true' and '",
+                    use_joystick,
+                    "' == 'false'",
+                ]
+            )
+        ),
         package="twist_stamper",
         executable="twist_unstamper",
         parameters=[{"use_sim_time": use_sim_time}],
         remappings=[
             ("/cmd_vel_in", "/diff_cont/cmd_vel"),
             ("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped"),
+        ],
+    )
+
+    # Twist mux stamper
+    twist_mux_stamper = Node(
+        condition=IfCondition(
+            PythonExpression(
+                [
+                    "'",
+                    use_navigation,
+                    "' == 'true' and '",
+                    use_ros2_control,
+                    "' == 'true'",
+                ]
+            )
+        ),
+        package="twist_stamper",
+        executable="twist_stamper",
+        parameters=[{"use_sim_time": use_sim_time}],
+        remappings=[
+            ("/cmd_vel_in", "/diff_cont/cmd_vel_nav"),
+            ("/cmd_vel_out", "/diff_cont/cmd_vel"),
         ],
     )
 
@@ -360,13 +497,20 @@ def generate_launch_description():
             declare_use_lidar_cmd,
             declare_lidar_update_rate_cmd,
             declare_use_ros2_control_cmd,
+            declare_use_joystick_cmd,
+            declare_use_navigation_cmd,
             # Nodes
             rsp_node,
             jsp_node,
             jsp_gui_node,
             teleop_keyboard,
-            # twist_stamper,
-            twist_unstamper,
+            twist_mux_ros2_control_node,
+            twist_mux_normal_node,
+            joy_node,
+            teleop_joy,
+            teleop_joy_stamper,
+            teleop_keyboard_unstamper,
+            twist_mux_stamper,
             gazebo_launch,
             spawn_entity,
             diff_drive_spawner,
