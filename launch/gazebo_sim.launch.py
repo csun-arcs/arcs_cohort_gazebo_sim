@@ -208,7 +208,7 @@ def generate_launch_description():
     )
 
     # Teleop with joystick
-    joy_teleop = Node(
+    teleop_joy = Node(
         condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'true'"])),
         package="teleop_twist_joy",
         executable="teleop_node",
@@ -218,7 +218,7 @@ def generate_launch_description():
     )
 
     # Twist stamper for joystick teleop node when ros2 control plugin is enabled
-    joy_ros2_control_twist_stamper = Node(
+    teleop_joy_stamper = Node(
         condition=IfCondition(
             PythonExpression(
                 [
@@ -434,8 +434,8 @@ def generate_launch_description():
             jsp_gui_node,
             teleop_keyboard,
             joy_node,
-            joy_teleop,
-            joy_ros2_control_twist_stamper,
+            teleop_joy,
+            teleop_joy_stamper,
             teleop_keyboard_unstamper,
             gazebo_launch,
             spawn_entity,
