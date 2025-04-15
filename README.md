@@ -77,8 +77,55 @@ To use this package, ensure the following dependencies are installed:
   - `teleop_twist_keyboard`
   - `twist_stamper`
   - `joy`
- 
 
+
+Launch Arguments
+
+The launch file, located in the launch/ folder (gazebo_sim.launch.py), is used to load the Gazebo simulation environment, spawn the robot model, and start necessary ROS 2 nodes. It includes several launch arguments to configure the launch process. Below are the supported arguments:
+
+    world: A path to specify the Gazebo world file to load.
+        Default: The 'test_obstacles_world_1.world' file in the 'worlds' directory of the 'arcs_cohort_gazebo_sim' package
+        Example: world:=/path/to/custom_world.world
+    use_sim_time: Determines whether to use simulation time from Gazebo.
+        Default: "true"
+        Example: use_sim_time:=false
+    model_package: Specifies the ROS 2 package containing the robot model.
+        Default: "arcs_cohort_description"
+        Example: model_package:=my_custom_description_package
+    model_file: A relative path to the robot model file within the model_package.
+        Default: "description/robot.urdf.xacro"
+        Example: model_file:=custom_folder/custom_model.urdf.xacro
+    robot_name: Specifies the name of the robot, useful for multi-robot scenarios or namespaces.
+        Default: "" (no prefix)
+        Example: robot_name:=cohort
+    camera_resolution: Sets the resolution profile for the simulated Stereolabs Zed camera.
+        Default: "VGA"
+        Options: "HD2K", "HD1080", "HD720", "VGA"
+        Example: camera_resolution:=HD1080
+    use_rsp: Controls whether to launch the robot_state_publisher.
+        Default: "true"
+        Example: use_rsp:=false
+    use_jsp: Controls whether to launch the joint_state_publisher.
+        Default: "false"
+        Example: use_jsp:=true
+    use_jsp_gui: Controls whether to launch the joint_state_publisher_gui.
+        Default: "false"
+        Example: use_jsp_gui:=true
+    use_lidar: Determines whether to include the LiDAR in the robot description.
+        Default: "false"
+        Example: use_lidar:=true
+    lidar_update_rate: Sets the update rate of the LiDAR sensor in Hz.
+        Default: "30"
+        Example: lidar_update_rate:=10
+    use_ros2_control: Enables ROS 2 Control for the robot.
+        Default: "false"
+        Example: use_ros2_control:=true
+    use_joystick: Enables joystick control for the robot.
+        Default: "false"
+        Example: use_joystick:=true
+    use_navigation: Enables the twist mux for navigation.
+        Default: "false"
+        Example: use_navigation:=true
 
 
 
