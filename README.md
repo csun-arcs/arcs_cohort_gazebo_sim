@@ -13,8 +13,6 @@ The `arcs_cohort_gazebo_sim` package provides a Gazebo simulation environment fo
   - [Teleoperation](#teleoperation)
   - [Navigation](#navigation)
 - [Configuration Files](#configuration-files)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Overview
 This package sets up a Gazebo simulation for the ARCS Cohort robot, with the following features:
@@ -32,11 +30,7 @@ The primary launch file, `gazebo_sim.launch.py`, orchestrates the simulation env
 - Starting ROS 2 nodes for state publishing, control, and teleoperation.
 - Establishing bridges for sensor data communication between Gazebo and ROS 2.
 
-## Package Structure
-The package follows a standard ROS 2 package structure, organized as follows:
-arcs_cohort_gazebo_sim/ ├── config/ │ ├── gazebo_bridge.yaml # ROS-Gazebo bridge configuration for sensors │ ├── gazebo_joystick_teleop.yaml # Joystick teleoperation parameters │ ├── gazebo_ros2_control_sim.yaml # ROS 2 control configuration for Gazebo │ └── ros2_control_params.yaml # Additional ROS 2 control parameters ├── control/ │ ├── gazebo_diff_drive_plugin # Differential drive plugin for Gazebo │ └── gazebo_ros2_control_plugin # ROS 2 control plugin for Gazebo ├── launch/ │ └── gazebo_sim.launch.py # Main launch file for the simulation ├── worlds/ │ └── test_obstacles_world_1.world # Example Gazebo world file ├── package.xml # ROS 2 package metadata ├── CMakeLists.txt # Build configuration └── README.md # This file
-
-
+## Folder Structure
 - **config/**: Contains YAML files for configuring sensors, teleoperation, and control systems.
 - **control/**: Includes Gazebo plugins for differential drive and ROS 2 control integration.
 - **launch/**: Holds the primary launch file to start the simulation environment.
@@ -124,7 +118,6 @@ The launch file, located in the `launch/` folder (`gazebo_sim.launch.py`), is us
 - **`use_navigation`**: Enables the twist mux for navigation.
   - **Default**: `"false"`
   - **Example**: `use_navigation:=true`
-
 
 
 ## Teleoperation
