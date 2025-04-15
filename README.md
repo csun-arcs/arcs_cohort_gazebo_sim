@@ -32,24 +32,10 @@ The primary launch file, `gazebo_sim.launch.py`, orchestrates the simulation env
 - Starting ROS 2 nodes for state publishing, control, and teleoperation.
 - Establishing bridges for sensor data communication between Gazebo and ROS 2.
 
-## Folder Structure
+## Package Structure
 The package follows a standard ROS 2 package structure, organized as follows:
-arcs_cohort_gazebo_sim/
-├── config/
-│   ├── gazebo_bridge.yaml          # ROS-Gazebo bridge configuration for sensors
-│   ├── gazebo_joystick_teleop.yaml # Joystick teleoperation parameters
-│   ├── gazebo_ros2_control_sim.yaml # ROS 2 control configuration for Gazebo
-│   └── ros2_control_params.yaml    # Additional ROS 2 control parameters
-├── control/
-│   ├── gazebo_diff_drive_plugin    # Differential drive plugin for Gazebo
-│   └── gazebo_ros2_control_plugin  # ROS 2 control plugin for Gazebo
-├── launch/
-│   └── gazebo_sim.launch.py        # Main launch file for the simulation
-├── worlds/
-│   └── test_obstacles_world_1.world # Example Gazebo world file
-├── package.xml                     # ROS 2 package metadata
-├── CMakeLists.txt                  # Build configuration
-└── README.md                       # This file
+arcs_cohort_gazebo_sim/ ├── config/ │ ├── gazebo_bridge.yaml # ROS-Gazebo bridge configuration for sensors │ ├── gazebo_joystick_teleop.yaml # Joystick teleoperation parameters │ ├── gazebo_ros2_control_sim.yaml # ROS 2 control configuration for Gazebo │ └── ros2_control_params.yaml # Additional ROS 2 control parameters ├── control/ │ ├── gazebo_diff_drive_plugin # Differential drive plugin for Gazebo │ └── gazebo_ros2_control_plugin # ROS 2 control plugin for Gazebo ├── launch/ │ └── gazebo_sim.launch.py # Main launch file for the simulation ├── worlds/ │ └── test_obstacles_world_1.world # Example Gazebo world file ├── package.xml # ROS 2 package metadata ├── CMakeLists.txt # Build configuration └── README.md # This file
+
 
 - **config/**: Contains YAML files for configuring sensors, teleoperation, and control systems.
 - **control/**: Includes Gazebo plugins for differential drive and ROS 2 control integration.
@@ -79,90 +65,108 @@ To use this package, ensure the following dependencies are installed:
   - `joy`
 
 
-Launch Arguments
+## Launch File and Arguments
 
-The launch file, located in the launch/ folder (gazebo_sim.launch.py), is used to load the Gazebo simulation environment, spawn the robot model, and start necessary ROS 2 nodes. It includes several launch arguments to configure the launch process. Below are the supported arguments:
+The launch file, located in the `launch/` folder (`gazebo_sim.launch.py`), is used to load the Gazebo simulation environment, spawn the robot model, and start necessary ROS 2 nodes. It includes several launch arguments to configure the launch process. Below are the supported arguments:
 
-    world: A path to specify the Gazebo world file to load.
-        Default: The 'test_obstacles_world_1.world' file in the 'worlds' directory of the 'arcs_cohort_gazebo_sim' package
-        Example: world:=/path/to/custom_world.world
-    use_sim_time: Determines whether to use simulation time from Gazebo.
-        Default: "true"
-        Example: use_sim_time:=false
-    model_package: Specifies the ROS 2 package containing the robot model.
-        Default: "arcs_cohort_description"
-        Example: model_package:=my_custom_description_package
-    model_file: A relative path to the robot model file within the model_package.
-        Default: "description/robot.urdf.xacro"
-        Example: model_file:=custom_folder/custom_model.urdf.xacro
-    robot_name: Specifies the name of the robot, useful for multi-robot scenarios or namespaces.
-        Default: "" (no prefix)
-        Example: robot_name:=cohort
-    camera_resolution: Sets the resolution profile for the simulated Stereolabs Zed camera.
-        Default: "VGA"
-        Options: "HD2K", "HD1080", "HD720", "VGA"
-        Example: camera_resolution:=HD1080
-    use_rsp: Controls whether to launch the robot_state_publisher.
-        Default: "true"
-        Example: use_rsp:=false
-    use_jsp: Controls whether to launch the joint_state_publisher.
-        Default: "false"
-        Example: use_jsp:=true
-    use_jsp_gui: Controls whether to launch the joint_state_publisher_gui.
-        Default: "false"
-        Example: use_jsp_gui:=true
-    use_lidar: Determines whether to include the LiDAR in the robot description.
-        Default: "false"
-        Example: use_lidar:=true
-    lidar_update_rate: Sets the update rate of the LiDAR sensor in Hz.
-        Default: "30"
-        Example: lidar_update_rate:=10
-    use_ros2_control: Enables ROS 2 Control for the robot.
-        Default: "false"
-        Example: use_ros2_control:=true
-    use_joystick: Enables joystick control for the robot.
-        Default: "false"
-        Example: use_joystick:=true
-    use_navigation: Enables the twist mux for navigation.
-        Default: "false"
-        Example: use_navigation:=true
+- **`world`**: A path to specify the Gazebo world file to load.
+  - **Default**: Path to `test_obstacles_world_1.world` in `arcs_cohort_gazebo_sim`
+  - **Example**: `world:=/path/to/custom_world.world`
+
+- **`use_sim_time`**: Determines whether to use simulation time from Gazebo.
+  - **Default**: `"true"`
+  - **Example**: `use_sim_time:=false`
+
+- **`model_package`**: Specifies the ROS 2 package containing the robot model.
+  - **Default**: `"arcs_cohort_description"`
+  - **Example**: `model_package:=my_custom_description_package`
+
+- **`model_file`**: A relative path to the robot model file within the `model_package`.
+  - **Default**: `"description/robot.urdf.xacro"`
+  - **Example**: `model_file:=another_folder/another_model.urdf.xacro`
+
+- **`robot_name`**: Specifies the name of the robot, useful for multi-robot scenarios or namespaces.
+  - **Default**: `""`
+  - **Example**: `robot_name:=my_robot`
+
+- **`camera_resolution`**: Sets the resolution profile for the simulated Stereolabs Zed camera. Options: `"HD2K"`, `"HD1080"`, `"HD720"`, `"VGA"`.
+  - **Default**: `"VGA"`
+  - **Example**: `camera_resolution:=HD1080`
+
+- **`use_rsp`**: Controls whether to launch the `robot_state_publisher`.
+  - **Default**: `"true"`
+  - **Example**: `use_rsp:=false`
+
+- **`use_jsp`**: Controls whether to launch the `joint_state_publisher`.
+  - **Default**: `"false"`
+  - **Example**: `use_jsp:=true`
+
+- **`use_jsp_gui`**: Controls whether to launch the `joint_state_publisher_gui`.
+  - **Default**: `"false"`
+  - **Example**: `use_jsp_gui:=true`
+
+- **`use_lidar`**: Determines whether to include the LiDAR in the robot description.
+  - **Default**: `"false"`
+  - **Example**: `use_lidar:=true`
+
+- **`lidar_update_rate`**: Sets the update rate of the LiDAR sensor in Hz.
+  - **Default**: `"30"`
+  - **Example**: `lidar_update_rate:=10`
+
+- **`use_ros2_control`**: Enables ROS 2 Control for the robot.
+  - **Default**: `"false"`
+  - **Example**: `use_ros2_control:=true`
+
+- **`use_joystick`**: Enables joystick control for the robot.
+  - **Default**: `"false"`
+  - **Example**: `use_joystick:=true`
+
+- **`use_navigation`**: Enables the twist mux for navigation.
+  - **Default**: `"false"`
+  - **Example**: `use_navigation:=true`
 
 
 
-Teleoperation
+## Teleoperation
 
 The package supports two teleoperation modes:
 
-    Joystick:
-        Enabled with use_joystick:=true.
-        Uses joy_node and teleop_twist_joy nodes.
-        Configured via config/gazebo_joystick_teleop.yaml (e.g., axis mappings, velocity scaling).
-        Publishes velocity commands to /diff_cont/cmd_vel_unstamped (or /diff_cont/cmd_vel if use_ros2_control:=true).
-        Requires a compatible joystick device.
-    Keyboard:
-        Enabled when use_joystick:=false.
-        Uses teleop_twist_keyboard node, launched in a new terminal via xterm.
-        Publishes velocity commands to /diff_cont/cmd_vel_unstamped (or /diff_cont/cmd_vel if use_ros2_control:=true).
-        Control the robot using arrow keys (refer to teleop_twist_keyboard documentation for key bindings).
+- **Joystick**:
+  - Enabled with `use_joystick:=true`.
+  - Uses `joy_node` and `teleop_twist_joy` nodes.
+  - Configured via `config/gazebo_joystick_teleop.yaml` (e.g., axis mappings, velocity scaling).
+  - Publishes velocity commands to `/diff_cont/cmd_vel_unstamped` (or `/diff_cont/cmd_vel` if `use_ros2_control:=true`).
+  - Requires a compatible joystick device.
 
-Navigation
+- **Keyboard**:
+  - Enabled when `use_joystick:=false`.
+  - Uses `teleop_twist_keyboard` node, launched in a new terminal via `xterm`.
+  - Publishes velocity commands to `/diff_cont/cmd_vel_unstamped` (or `/diff_cont/cmd_vel` if `use_ros2_control:=true`).
+  - Control the robot using arrow keys (refer to `teleop_twist_keyboard` documentation for key bindings).
 
-Navigation support is enabled with use_navigation:=true, which launches the twist_mux node:
+---
 
-    Configured via arcs_cohort_navigation/config/twist_mux.yaml.
-    Combines velocity commands from multiple sources (e.g., teleoperation, navigation stack).
-    Remaps output to:
-        /diff_cont/cmd_vel_nav (stamped as /diff_cont/cmd_vel if use_ros2_control:=true).
-        /diff_cont/cmd_vel_unstamped (if use_ros2_control:=false).
-    Integrates with the arcs_cohort_navigation package for waypoint navigation or autonomous tasks.
+## Navigation
 
-Configuration Files
+Navigation support is enabled with `use_navigation:=true`, which launches the `twist_mux` node:
 
-The config folder contains the following YAML files:
+- Configured via `arcs_cohort_navigation/config/twist_mux.yaml`.
+- Combines velocity commands from multiple sources (e.g., teleoperation, navigation stack).
+- Remaps output to:
+  - `/diff_cont/cmd_vel_nav` (stamped as `/diff_cont/cmd_vel` if `use_ros2_control:=true`).
+  - `/diff_cont/cmd_vel_unstamped` (if `use_ros2_control:=false`).
+- Integrates with the `arcs_cohort_navigation` package for waypoint navigation or autonomous tasks.
 
-    gazebo_bridge.yaml: Defines ROS-Gazebo bridge topics for sensors (e.g., camera images, depth data, LiDAR).
-    gazebo_joystick_teleop.yaml: Parameters for joystick teleoperation, including axis mappings and velocity scaling.
-    gazebo_ros2_control_sim.yaml: Configuration for ROS 2 control in Gazebo, specifying controller settings.
-    ros2_control_params.yaml: Additional parameters for ROS 2 controllers (e.g., diff_cont for differential drive, joint_broad for joint states).
+---
+
+## Configuration Files
+
+The `config/` folder contains the following YAML files:
+
+- **`gazebo_bridge.yaml`**: Defines ROS-Gazebo bridge topics for sensors (e.g., camera images, depth data, LiDAR).
+- **`gazebo_joystick_teleop.yaml`**: Parameters for joystick teleoperation, including axis mappings and velocity scaling.
+- **`gazebo_ros2_control_sim.yaml`**: Configuration for ROS 2 control in Gazebo, specifying controller settings.
+- **`ros2_control_params.yaml`**: Additional parameters for ROS 2 controllers (e.g., `diff_cont` for differential drive, `joint_broad` for joint states).
 
 To customize sensor topics, control behavior, or teleoperation settings, modify these files as needed. Ensure topic names align with your robot model and navigation stack.
+
