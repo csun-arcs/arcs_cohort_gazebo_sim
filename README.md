@@ -1,6 +1,6 @@
 # ARCS Cohort Gazebo Simulation Package
 
-The `arcs_cohort_gazebo_sim` package provides a Gazebo simulation environment for the ARCS Cohort robot, enabling users to simulate the robot's behavior in various world configurations. It integrates with ROS 2 and Gazebo to support robot control, sensor simulation (e.g., Stereolabs Zed camera, LiDAR), and teleoperation using joysticks or keyboards. This package is designed to work with the `arcs_cohort_description` and `arcs_cohort_navigation` packages for a complete simulation and navigation stack.
+The `arcs_cohort_gazebo_sim` package provides a Gazebo simulation environment for the ARCS Cohort robot, enabling users to simulate the robot's behavior in various world configurations. It integrates with ROS 2 and Gazebo to support robot control, sensor simulation (e.g., Stereolabs Zed camera, LiDAR), and teleoperation using joysticks or keyboards.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -15,7 +15,7 @@ The `arcs_cohort_gazebo_sim` package provides a Gazebo simulation environment fo
 - [Configuration Files](#configuration-files)
 
 ## Overview
-This package sets up a Gazebo simulation for the ARCS Cohort robot, with the following features:
+This package sets up a Gazebo simulation for the ARCS CoHORT rover, with the following features:
 - A customizable robot model loaded via URDF/Xacro from the `arcs_cohort_description` package.
 - Simulated sensors, including a Stereolabs Zed camera (with configurable resolution) and an optional LiDAR.
 - Support for differential drive and ROS 2 control plugins for robot actuation.
