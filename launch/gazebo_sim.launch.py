@@ -25,7 +25,7 @@ def generate_launch_description():
     pkg_description = "arcs_cohort_description"
     pkg_nav = "arcs_cohort_navigation"
 
-    # Paths
+    # Defaults
     default_world_path = os.path.join(
         get_package_share_directory(pkg_gazebo_sim),
         "worlds",
@@ -40,6 +40,7 @@ def generate_launch_description():
     default_twist_mux_params_path = os.path.join(
         get_package_share_directory(pkg_nav), "config", "twist_mux.yaml"
     )
+    default_log_level = "INFO"
 
     # Declare launch arguments
     declare_world_arg = DeclareLaunchArgument(
@@ -122,6 +123,11 @@ def generate_launch_description():
         default_value="false",
         description="Set the argument to true if you want to launch twist mux",
     )
+    declare_log_level_arg = DeclareLaunchArgument(
+        "log_level",
+        default_value=default_log_level,
+        description="Set the log level for nodes."
+    )
 
     # Launch configurations
     world = LaunchConfiguration("world")
@@ -139,6 +145,7 @@ def generate_launch_description():
     use_ros2_control = LaunchConfiguration("use_ros2_control")
     use_joystick = LaunchConfiguration("use_joystick")
     use_navigation = LaunchConfiguration("use_navigation")
+    log_level = LaunchConfiguration("log_level")
 
     # Compute the robot prefix only if a robot name is provided
     # This expression will evaluate to, for example, "cohort_" if
@@ -183,6 +190,7 @@ def generate_launch_description():
             {"robot_description": robot_description, "use_sim_time": use_sim_time}
         ],
         output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Joint State Publisher node
@@ -197,6 +205,7 @@ def generate_launch_description():
         name="joint_state_publisher",
         parameters=[{"use_sim_time": use_sim_time}],
         output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Joint State Publisher GUI node
@@ -207,6 +216,7 @@ def generate_launch_description():
         name="joint_state_publisher_gui",
         parameters=[{"use_sim_time": use_sim_time}],
         output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Twist Mux when using ros2 control plugin
@@ -226,6 +236,7 @@ def generate_launch_description():
         executable="twist_mux",
         parameters=[default_twist_mux_params_path, {"use_sim_time": use_sim_time}],
         remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_nav")],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Twist Mux when using differential drive plugin
@@ -245,6 +256,7 @@ def generate_launch_description():
         executable="twist_mux",
         parameters=[default_twist_mux_params_path, {"use_sim_time": use_sim_time}],
         remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped")],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Jostick Node
@@ -253,6 +265,7 @@ def generate_launch_description():
         package="joy",
         executable="joy_node",
         parameters=[default_joystick_params_path],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Teleop with joystick
@@ -263,6 +276,7 @@ def generate_launch_description():
         name="teleop_node",
         parameters=[default_joystick_params_path, {"use_sim_time": use_sim_time}],
         remappings=[("/cmd_vel", "/diff_cont/cmd_vel_unstamped")],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Twist stamper for joystick teleop node when ros2 control plugin is enabled
@@ -285,6 +299,7 @@ def generate_launch_description():
             ("/cmd_vel_in", "/diff_cont/cmd_vel_unstamped"),
             ("/cmd_vel_out", "/diff_cont/cmd_vel"),
         ],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Teleop with keyboard
@@ -308,6 +323,7 @@ def generate_launch_description():
                 ),
             )
         ],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Twist unstamper for keyboard to pass into twist mux for Nav2 waypoint navigation
@@ -330,6 +346,7 @@ def generate_launch_description():
             ("/cmd_vel_in", "/diff_cont/cmd_vel"),
             ("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped"),
         ],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Twist mux stamper
@@ -352,6 +369,7 @@ def generate_launch_description():
             ("/cmd_vel_in", "/diff_cont/cmd_vel_nav"),
             ("/cmd_vel_out", "/diff_cont/cmd_vel"),
         ],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Gazebo launch
@@ -375,7 +393,7 @@ def generate_launch_description():
     spawn_entity_node = Node(
         package="ros_gz_sim",
         executable="create",
-        arguments=["-topic", "robot_description", "-name", "cohort", "-z", "0.1"],
+        arguments=["-topic", "robot_description", "-name", "cohort", "-z", "0.1", "--ros-args", "--log-level", log_level],
         output="screen",
     )
 
@@ -384,7 +402,7 @@ def generate_launch_description():
         condition=IfCondition(use_ros2_control),
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_cont"],
+        arguments=["diff_cont", "--ros-args", "--log-level", log_level],
     )
 
     # Joint state broadcaster spawner
@@ -392,7 +410,7 @@ def generate_launch_description():
         condition=IfCondition(use_ros2_control),
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_broad"],
+        arguments=["joint_broad", "--ros-args", "--log-level", log_level],
     )
 
     # Gazebo bridge parameters
@@ -407,6 +425,7 @@ def generate_launch_description():
         executable="parameter_bridge",
         parameters=[{"config_file": bridge_params}],
         output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Image bridge for left camera image
@@ -414,7 +433,7 @@ def generate_launch_description():
         name="left_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/left_camera/image"],
+        arguments=["camera/left_camera/image", "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
             ("camera/left_camera/image", "camera/left_camera/image"),
@@ -436,7 +455,7 @@ def generate_launch_description():
         name="right_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/right_camera/image"],
+        arguments=["camera/right_camera/image", "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
             ("camera/right_camera/image", "camera/right_camera/image"),
@@ -458,7 +477,7 @@ def generate_launch_description():
         name="left_camera_depth_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/left_camera/depth_image"],
+        arguments=["camera/left_camera/depth_image", "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
             ("camera/left_camera/depth_image", "camera/left_camera/depth_image"),
@@ -499,6 +518,7 @@ def generate_launch_description():
             declare_use_ros2_control_arg,
             declare_use_joystick_arg,
             declare_use_navigation_arg,
+            declare_log_level_arg,
             # Launchers
             gazebo_launch,
             # Nodes
