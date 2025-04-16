@@ -256,7 +256,7 @@ def generate_launch_description():
     )
 
     # Teleop with joystick
-    teleop_joy = Node(
+    teleop_joy_node = Node(
         condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'true'"])),
         package="teleop_twist_joy",
         executable="teleop_node",
@@ -266,7 +266,7 @@ def generate_launch_description():
     )
 
     # Twist stamper for joystick teleop node when ros2 control plugin is enabled
-    teleop_joy_stamper = Node(
+    teleop_joy_stamper_node = Node(
         condition=IfCondition(
             PythonExpression(
                 [
@@ -288,7 +288,7 @@ def generate_launch_description():
     )
 
     # Teleop with keyboard
-    teleop_keyboard = Node(
+    teleop_keyboard_node = Node(
         condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'false'"])),
         package="teleop_twist_keyboard",
         executable="teleop_twist_keyboard",
@@ -311,7 +311,7 @@ def generate_launch_description():
     )
 
     # Twist unstamper for keyboard to pass into twist mux for Nav2 waypoint navigation
-    teleop_keyboard_unstamper = Node(
+    teleop_keyboard_unstamper_node = Node(
         condition=IfCondition(
             PythonExpression(
                 [
@@ -333,7 +333,7 @@ def generate_launch_description():
     )
 
     # Twist mux stamper
-    twist_mux_stamper = Node(
+    twist_mux_stamper_node = Node(
         condition=IfCondition(
             PythonExpression(
                 [
@@ -372,7 +372,7 @@ def generate_launch_description():
     )
 
     # Spawn robot into Gazebo
-    spawn_entity = Node(
+    spawn_entity_node = Node(
         package="ros_gz_sim",
         executable="create",
         arguments=["-topic", "robot_description", "-name", "cohort", "-z", "0.1"],
@@ -380,7 +380,7 @@ def generate_launch_description():
     )
 
     # Differential drive controller spawner
-    diff_drive_spawner = Node(
+    diff_drive_spawner_node = Node(
         condition=IfCondition(use_ros2_control),
         package="controller_manager",
         executable="spawner",
@@ -388,7 +388,7 @@ def generate_launch_description():
     )
 
     # Joint state broadcaster spawner
-    joint_broad_spawner = Node(
+    joint_broad_spawner_node = Node(
         condition=IfCondition(use_ros2_control),
         package="controller_manager",
         executable="spawner",
@@ -401,7 +401,7 @@ def generate_launch_description():
     )
 
     # Start the Gazebo ROS bridge
-    start_gazebo_ros_bridge = Node(
+    start_gazebo_ros_bridge_node = Node(
         name="parameter_bridge",
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -410,7 +410,7 @@ def generate_launch_description():
     )
 
     # Image bridge for left camera image
-    ros_gz_image_bridge_left = Node(
+    ros_gz_image_bridge_left_node = Node(
         name="left_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
@@ -432,7 +432,7 @@ def generate_launch_description():
     )
 
     # Image bridge for right camera image
-    ros_gz_image_bridge_right = Node(
+    ros_gz_image_bridge_right_node = Node(
         name="right_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
@@ -454,7 +454,7 @@ def generate_launch_description():
     )
 
     # Image bridge for left camera depth image
-    ros_gz_image_bridge_depth = Node(
+    ros_gz_image_bridge_depth_node = Node(
         name="left_camera_depth_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
@@ -499,25 +499,26 @@ def generate_launch_description():
             declare_use_ros2_control_arg,
             declare_use_joystick_arg,
             declare_use_navigation_arg,
+            # Launchers
+            gazebo_launch,
             # Nodes
+            spawn_entity_node,
+            ros_gz_image_bridge_left_node,
+            ros_gz_image_bridge_right_node,
+            ros_gz_image_bridge_depth_node,
             rsp_node,
             jsp_node,
             jsp_gui_node,
-            teleop_keyboard,
+            teleop_keyboard_node,
             twist_mux_ros2_control_node,
             twist_mux_normal_node,
             joy_node,
-            teleop_joy,
-            teleop_joy_stamper,
-            teleop_keyboard_unstamper,
-            twist_mux_stamper,
-            gazebo_launch,
-            spawn_entity,
-            diff_drive_spawner,
-            joint_broad_spawner,
-            start_gazebo_ros_bridge,
-            ros_gz_image_bridge_left,
-            ros_gz_image_bridge_right,
-            ros_gz_image_bridge_depth,
+            teleop_joy_node,
+            teleop_joy_stamper_node,
+            teleop_keyboard_unstamper_node,
+            twist_mux_stamper_node,
+            diff_drive_spawner_node,
+            joint_broad_spawner_node,
+            start_gazebo_ros_bridge_node,
         ]
     )
