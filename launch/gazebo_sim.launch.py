@@ -25,7 +25,7 @@ def generate_launch_description():
     pkg_description = "arcs_cohort_description"
     pkg_nav = "arcs_cohort_navigation"
 
-    # Paths
+    # Defaults
     default_world_path = os.path.join(
         get_package_share_directory(pkg_gazebo_sim),
         "worlds",
@@ -40,27 +40,28 @@ def generate_launch_description():
     default_twist_mux_params_path = os.path.join(
         get_package_share_directory(pkg_nav), "config", "twist_mux.yaml"
     )
+    default_log_level = "INFO"
 
     # Declare launch arguments
-    declare_world_cmd = DeclareLaunchArgument(
+    declare_world_arg = DeclareLaunchArgument(
         "world",
         default_value=default_world_path,
         description="Path to the world file to load",
     )
-    declare_use_sim_time_cmd = DeclareLaunchArgument(
+    declare_use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time", default_value="true", description="Use simulation time"
     )
-    declare_model_package_cmd = DeclareLaunchArgument(
+    declare_model_package_arg = DeclareLaunchArgument(
         "model_package",
         default_value=pkg_description,
         description="Package containing the robot model",
     )
-    declare_model_file_cmd = DeclareLaunchArgument(
+    declare_model_file_arg = DeclareLaunchArgument(
         "model_file",
         default_value=default_model_path,
         description="Relative path to the robot model file",
     )
-    declare_robot_name_cmd = DeclareLaunchArgument(
+    declare_robot_name_arg = DeclareLaunchArgument(
         "robot_name",
         default_value="",
         description=(
@@ -68,7 +69,7 @@ def generate_launch_description():
             "robot name prefix to joints, links, etc. in the robot model)."
         ),
     )
-    declare_camera_resolution_cmd = DeclareLaunchArgument(
+    declare_camera_resolution_arg = DeclareLaunchArgument(
         "camera_resolution",
         default_value="VGA",
         description=(
@@ -81,46 +82,51 @@ def generate_launch_description():
     # due to double-namespacing issue when launcher is called from an upstream
     # launcher.
     #
-    # declare_namespace_cmd = DeclareLaunchArgument(
+    # declare_namespace_arg = DeclareLaunchArgument(
     #     "namespace",
     #     default_value="",
     #     description="Namespace under which to bring up camera image bridges."
     # )
-    declare_use_rsp_cmd = DeclareLaunchArgument(
+    declare_use_rsp_arg = DeclareLaunchArgument(
         "use_rsp", default_value="true", description="Launch robot_state_publisher"
     )
-    declare_use_jsp_cmd = DeclareLaunchArgument(
+    declare_use_jsp_arg = DeclareLaunchArgument(
         "use_jsp", default_value="false", description="Launch joint_state_publisher"
     )
-    declare_use_jsp_gui_cmd = DeclareLaunchArgument(
+    declare_use_jsp_gui_arg = DeclareLaunchArgument(
         "use_jsp_gui",
         default_value="false",
         description="Launch joint_state_publisher_gui",
     )
-    declare_use_lidar_cmd = DeclareLaunchArgument(
+    declare_use_lidar_arg = DeclareLaunchArgument(
         "use_lidar",
         default_value="false",
         description="If true, include the lidar in the robot description",
     )
-    declare_lidar_update_rate_cmd = DeclareLaunchArgument(
+    declare_lidar_update_rate_arg = DeclareLaunchArgument(
         "lidar_update_rate",
         default_value="30",
         description="Set the update rate of the LiDAR sensor.",
     )
-    declare_use_ros2_control_cmd = DeclareLaunchArgument(
+    declare_use_ros2_control_arg = DeclareLaunchArgument(
         "use_ros2_control",
         default_value="false",
         description="Use ROS2 Control for the robot",
     )
-    declare_use_joystick_cmd = DeclareLaunchArgument(
+    declare_use_joystick_arg = DeclareLaunchArgument(
         "use_joystick",
         default_value="false",
         description="Use joystick to control the robot",
     )
-    declare_use_navigation_cmd = DeclareLaunchArgument(
+    declare_use_navigation_arg = DeclareLaunchArgument(
         "use_navigation",
         default_value="false",
         description="Set the argument to true if you want to launch twist mux",
+    )
+    declare_log_level_arg = DeclareLaunchArgument(
+        "log_level",
+        default_value=default_log_level,
+        description="Set the log level for nodes."
     )
 
     # Launch configurations
@@ -139,6 +145,7 @@ def generate_launch_description():
     use_ros2_control = LaunchConfiguration("use_ros2_control")
     use_joystick = LaunchConfiguration("use_joystick")
     use_navigation = LaunchConfiguration("use_navigation")
+    log_level = LaunchConfiguration("log_level")
 
     # Compute the robot prefix only if a robot name is provided
     # This expression will evaluate to, for example, "cohort_" if
@@ -183,6 +190,7 @@ def generate_launch_description():
             {"robot_description": robot_description, "use_sim_time": use_sim_time}
         ],
         output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Joint State Publisher node
@@ -197,6 +205,7 @@ def generate_launch_description():
         name="joint_state_publisher",
         parameters=[{"use_sim_time": use_sim_time}],
         output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Joint State Publisher GUI node
@@ -207,6 +216,7 @@ def generate_launch_description():
         name="joint_state_publisher_gui",
         parameters=[{"use_sim_time": use_sim_time}],
         output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Twist Mux when using ros2 control plugin
@@ -226,6 +236,7 @@ def generate_launch_description():
         executable="twist_mux",
         parameters=[default_twist_mux_params_path, {"use_sim_time": use_sim_time}],
         remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_nav")],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Twist Mux when using differential drive plugin
@@ -245,6 +256,7 @@ def generate_launch_description():
         executable="twist_mux",
         parameters=[default_twist_mux_params_path, {"use_sim_time": use_sim_time}],
         remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped")],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Jostick Node
@@ -253,20 +265,22 @@ def generate_launch_description():
         package="joy",
         executable="joy_node",
         parameters=[default_joystick_params_path],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Teleop with joystick
-    teleop_joy = Node(
+    teleop_joy_node = Node(
         condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'true'"])),
         package="teleop_twist_joy",
         executable="teleop_node",
         name="teleop_node",
         parameters=[default_joystick_params_path, {"use_sim_time": use_sim_time}],
         remappings=[("/cmd_vel", "/diff_cont/cmd_vel_unstamped")],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Twist stamper for joystick teleop node when ros2 control plugin is enabled
-    teleop_joy_stamper = Node(
+    teleop_joy_stamper_node = Node(
         condition=IfCondition(
             PythonExpression(
                 [
@@ -285,10 +299,11 @@ def generate_launch_description():
             ("/cmd_vel_in", "/diff_cont/cmd_vel_unstamped"),
             ("/cmd_vel_out", "/diff_cont/cmd_vel"),
         ],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Teleop with keyboard
-    teleop_keyboard = Node(
+    teleop_keyboard_node = Node(
         condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'false'"])),
         package="teleop_twist_keyboard",
         executable="teleop_twist_keyboard",
@@ -308,10 +323,11 @@ def generate_launch_description():
                 ),
             )
         ],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Twist unstamper for keyboard to pass into twist mux for Nav2 waypoint navigation
-    teleop_keyboard_unstamper = Node(
+    teleop_keyboard_unstamper_node = Node(
         condition=IfCondition(
             PythonExpression(
                 [
@@ -330,10 +346,11 @@ def generate_launch_description():
             ("/cmd_vel_in", "/diff_cont/cmd_vel"),
             ("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped"),
         ],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Twist mux stamper
-    twist_mux_stamper = Node(
+    twist_mux_stamper_node = Node(
         condition=IfCondition(
             PythonExpression(
                 [
@@ -352,6 +369,7 @@ def generate_launch_description():
             ("/cmd_vel_in", "/diff_cont/cmd_vel_nav"),
             ("/cmd_vel_out", "/diff_cont/cmd_vel"),
         ],
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Gazebo launch
@@ -372,27 +390,27 @@ def generate_launch_description():
     )
 
     # Spawn robot into Gazebo
-    spawn_entity = Node(
+    spawn_entity_node = Node(
         package="ros_gz_sim",
         executable="create",
-        arguments=["-topic", "robot_description", "-name", "cohort", "-z", "0.1"],
+        arguments=["-topic", "robot_description", "-name", "cohort", "-z", "0.1", "--ros-args", "--log-level", log_level],
         output="screen",
     )
 
     # Differential drive controller spawner
-    diff_drive_spawner = Node(
+    diff_drive_spawner_node = Node(
         condition=IfCondition(use_ros2_control),
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_cont"],
+        arguments=["diff_cont", "--ros-args", "--log-level", log_level],
     )
 
     # Joint state broadcaster spawner
-    joint_broad_spawner = Node(
+    joint_broad_spawner_node = Node(
         condition=IfCondition(use_ros2_control),
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_broad"],
+        arguments=["joint_broad", "--ros-args", "--log-level", log_level],
     )
 
     # Gazebo bridge parameters
@@ -401,20 +419,21 @@ def generate_launch_description():
     )
 
     # Start the Gazebo ROS bridge
-    start_gazebo_ros_bridge = Node(
+    start_gazebo_ros_bridge_node = Node(
         name="parameter_bridge",
         package="ros_gz_bridge",
         executable="parameter_bridge",
         parameters=[{"config_file": bridge_params}],
         output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
     )
 
     # Image bridge for left camera image
-    ros_gz_image_bridge_left = Node(
+    ros_gz_image_bridge_left_node = Node(
         name="left_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/left_camera/image"],
+        arguments=["camera/left_camera/image", "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
             ("camera/left_camera/image", "camera/left_camera/image"),
@@ -432,11 +451,11 @@ def generate_launch_description():
     )
 
     # Image bridge for right camera image
-    ros_gz_image_bridge_right = Node(
+    ros_gz_image_bridge_right_node = Node(
         name="right_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/right_camera/image"],
+        arguments=["camera/right_camera/image", "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
             ("camera/right_camera/image", "camera/right_camera/image"),
@@ -454,11 +473,11 @@ def generate_launch_description():
     )
 
     # Image bridge for left camera depth image
-    ros_gz_image_bridge_depth = Node(
+    ros_gz_image_bridge_depth_node = Node(
         name="left_camera_depth_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/left_camera/depth_image"],
+        arguments=["camera/left_camera/depth_image", "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
             ("camera/left_camera/depth_image", "camera/left_camera/depth_image"),
@@ -484,40 +503,42 @@ def generate_launch_description():
     return LaunchDescription(
         [
             # Declare launch arguments
-            declare_world_cmd,
-            declare_use_sim_time_cmd,
-            declare_model_package_cmd,
-            declare_model_file_cmd,
-            declare_robot_name_cmd,
-            declare_camera_resolution_cmd,
-            # declare_namespace_cmd,
-            declare_use_rsp_cmd,
-            declare_use_jsp_cmd,
-            declare_use_jsp_gui_cmd,
-            declare_use_lidar_cmd,
-            declare_lidar_update_rate_cmd,
-            declare_use_ros2_control_cmd,
-            declare_use_joystick_cmd,
-            declare_use_navigation_cmd,
+            declare_world_arg,
+            declare_use_sim_time_arg,
+            declare_model_package_arg,
+            declare_model_file_arg,
+            declare_robot_name_arg,
+            declare_camera_resolution_arg,
+            # declare_namespace_arg,
+            declare_use_rsp_arg,
+            declare_use_jsp_arg,
+            declare_use_jsp_gui_arg,
+            declare_use_lidar_arg,
+            declare_lidar_update_rate_arg,
+            declare_use_ros2_control_arg,
+            declare_use_joystick_arg,
+            declare_use_navigation_arg,
+            declare_log_level_arg,
+            # Launchers
+            gazebo_launch,
             # Nodes
+            spawn_entity_node,
+            ros_gz_image_bridge_left_node,
+            ros_gz_image_bridge_right_node,
+            ros_gz_image_bridge_depth_node,
             rsp_node,
             jsp_node,
             jsp_gui_node,
-            teleop_keyboard,
+            teleop_keyboard_node,
             twist_mux_ros2_control_node,
             twist_mux_normal_node,
             joy_node,
-            teleop_joy,
-            teleop_joy_stamper,
-            teleop_keyboard_unstamper,
-            twist_mux_stamper,
-            gazebo_launch,
-            spawn_entity,
-            diff_drive_spawner,
-            joint_broad_spawner,
-            start_gazebo_ros_bridge,
-            ros_gz_image_bridge_left,
-            ros_gz_image_bridge_right,
-            ros_gz_image_bridge_depth,
+            teleop_joy_node,
+            teleop_joy_stamper_node,
+            teleop_keyboard_unstamper_node,
+            twist_mux_stamper_node,
+            diff_drive_spawner_node,
+            joint_broad_spawner_node,
+            start_gazebo_ros_bridge_node,
         ]
     )
