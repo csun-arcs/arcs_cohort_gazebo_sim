@@ -42,25 +42,25 @@ def generate_launch_description():
     )
 
     # Declare launch arguments
-    declare_world_cmd = DeclareLaunchArgument(
+    declare_world_arg = DeclareLaunchArgument(
         "world",
         default_value=default_world_path,
         description="Path to the world file to load",
     )
-    declare_use_sim_time_cmd = DeclareLaunchArgument(
+    declare_use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time", default_value="true", description="Use simulation time"
     )
-    declare_model_package_cmd = DeclareLaunchArgument(
+    declare_model_package_arg = DeclareLaunchArgument(
         "model_package",
         default_value=pkg_description,
         description="Package containing the robot model",
     )
-    declare_model_file_cmd = DeclareLaunchArgument(
+    declare_model_file_arg = DeclareLaunchArgument(
         "model_file",
         default_value=default_model_path,
         description="Relative path to the robot model file",
     )
-    declare_robot_name_cmd = DeclareLaunchArgument(
+    declare_robot_name_arg = DeclareLaunchArgument(
         "robot_name",
         default_value="",
         description=(
@@ -68,7 +68,7 @@ def generate_launch_description():
             "robot name prefix to joints, links, etc. in the robot model)."
         ),
     )
-    declare_camera_resolution_cmd = DeclareLaunchArgument(
+    declare_camera_resolution_arg = DeclareLaunchArgument(
         "camera_resolution",
         default_value="VGA",
         description=(
@@ -81,43 +81,43 @@ def generate_launch_description():
     # due to double-namespacing issue when launcher is called from an upstream
     # launcher.
     #
-    # declare_namespace_cmd = DeclareLaunchArgument(
+    # declare_namespace_arg = DeclareLaunchArgument(
     #     "namespace",
     #     default_value="",
     #     description="Namespace under which to bring up camera image bridges."
     # )
-    declare_use_rsp_cmd = DeclareLaunchArgument(
+    declare_use_rsp_arg = DeclareLaunchArgument(
         "use_rsp", default_value="true", description="Launch robot_state_publisher"
     )
-    declare_use_jsp_cmd = DeclareLaunchArgument(
+    declare_use_jsp_arg = DeclareLaunchArgument(
         "use_jsp", default_value="false", description="Launch joint_state_publisher"
     )
-    declare_use_jsp_gui_cmd = DeclareLaunchArgument(
+    declare_use_jsp_gui_arg = DeclareLaunchArgument(
         "use_jsp_gui",
         default_value="false",
         description="Launch joint_state_publisher_gui",
     )
-    declare_use_lidar_cmd = DeclareLaunchArgument(
+    declare_use_lidar_arg = DeclareLaunchArgument(
         "use_lidar",
         default_value="false",
         description="If true, include the lidar in the robot description",
     )
-    declare_lidar_update_rate_cmd = DeclareLaunchArgument(
+    declare_lidar_update_rate_arg = DeclareLaunchArgument(
         "lidar_update_rate",
         default_value="30",
         description="Set the update rate of the LiDAR sensor.",
     )
-    declare_use_ros2_control_cmd = DeclareLaunchArgument(
+    declare_use_ros2_control_arg = DeclareLaunchArgument(
         "use_ros2_control",
         default_value="false",
         description="Use ROS2 Control for the robot",
     )
-    declare_use_joystick_cmd = DeclareLaunchArgument(
+    declare_use_joystick_arg = DeclareLaunchArgument(
         "use_joystick",
         default_value="false",
         description="Use joystick to control the robot",
     )
-    declare_use_navigation_cmd = DeclareLaunchArgument(
+    declare_use_navigation_arg = DeclareLaunchArgument(
         "use_navigation",
         default_value="false",
         description="Set the argument to true if you want to launch twist mux",
@@ -484,21 +484,21 @@ def generate_launch_description():
     return LaunchDescription(
         [
             # Declare launch arguments
-            declare_world_cmd,
-            declare_use_sim_time_cmd,
-            declare_model_package_cmd,
-            declare_model_file_cmd,
-            declare_robot_name_cmd,
-            declare_camera_resolution_cmd,
-            # declare_namespace_cmd,
-            declare_use_rsp_cmd,
-            declare_use_jsp_cmd,
-            declare_use_jsp_gui_cmd,
-            declare_use_lidar_cmd,
-            declare_lidar_update_rate_cmd,
-            declare_use_ros2_control_cmd,
-            declare_use_joystick_cmd,
-            declare_use_navigation_cmd,
+            declare_world_arg,
+            declare_use_sim_time_arg,
+            declare_model_package_arg,
+            declare_model_file_arg,
+            declare_robot_name_arg,
+            declare_camera_resolution_arg,
+            # declare_namespace_arg,
+            declare_use_rsp_arg,
+            declare_use_jsp_arg,
+            declare_use_jsp_gui_arg,
+            declare_use_lidar_arg,
+            declare_lidar_update_rate_arg,
+            declare_use_ros2_control_arg,
+            declare_use_joystick_arg,
+            declare_use_navigation_arg,
             # Nodes
             rsp_node,
             jsp_node,
