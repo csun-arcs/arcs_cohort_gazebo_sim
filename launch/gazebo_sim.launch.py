@@ -118,6 +118,11 @@ def generate_launch_description():
         default_value="false",
         description="Use joystick to control the robot",
     )
+    declare_use_keyboard_arg = DeclareLaunchArgument(
+        "use_keyboard",
+        default_value="false",
+        description="Use keyboard to control the robot",
+    )
     declare_use_navigation_arg = DeclareLaunchArgument(
         "use_navigation",
         default_value="false",
@@ -126,7 +131,7 @@ def generate_launch_description():
     declare_log_level_arg = DeclareLaunchArgument(
         "log_level",
         default_value=default_log_level,
-        description="Set the log level for nodes."
+        description="Set the log level for nodes.",
     )
 
     # Launch configurations
@@ -144,6 +149,7 @@ def generate_launch_description():
     lidar_update_rate = LaunchConfiguration("lidar_update_rate")
     use_ros2_control = LaunchConfiguration("use_ros2_control")
     use_joystick = LaunchConfiguration("use_joystick")
+    use_keyboard = LaunchConfiguration("use_keyboard")
     use_navigation = LaunchConfiguration("use_navigation")
     log_level = LaunchConfiguration("log_level")
 
@@ -178,6 +184,8 @@ def generate_launch_description():
             use_ros2_control,
             " use_joystick:=",
             use_joystick,
+            " use_keyboard:=",
+            use_keyboard,
         ]
     )
 
@@ -304,7 +312,7 @@ def generate_launch_description():
 
     # Teleop with keyboard
     teleop_keyboard_node = Node(
-        condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'false'"])),
+        condition=IfCondition(PythonExpression(["'", use_keyboard, "' == 'true'"])),
         package="teleop_twist_keyboard",
         executable="teleop_twist_keyboard",
         prefix="xterm -e",
@@ -334,8 +342,8 @@ def generate_launch_description():
                     "'",
                     use_ros2_control,
                     "' == 'true' and '",
-                    use_joystick,
-                    "' == 'false'",
+                    use_keyboard,
+                    "' == 'true'",
                 ]
             )
         ),
@@ -393,7 +401,17 @@ def generate_launch_description():
     spawn_entity_node = Node(
         package="ros_gz_sim",
         executable="create",
-        arguments=["-topic", "robot_description", "-name", "cohort", "-z", "0.1", "--ros-args", "--log-level", log_level],
+        arguments=[
+            "-topic",
+            "robot_description",
+            "-name",
+            "cohort",
+            "-z",
+            "0.1",
+            "--ros-args",
+            "--log-level",
+            log_level,
+        ],
         output="screen",
     )
 
@@ -477,7 +495,12 @@ def generate_launch_description():
         name="left_camera_depth_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/left_camera/depth_image", "--ros-args", "--log-level", log_level],
+        arguments=[
+            "camera/left_camera/depth_image",
+            "--ros-args",
+            "--log-level",
+            log_level,
+        ],
         output="screen",
         remappings=[
             ("camera/left_camera/depth_image", "camera/left_camera/depth_image"),
@@ -517,6 +540,7 @@ def generate_launch_description():
             declare_lidar_update_rate_arg,
             declare_use_ros2_control_arg,
             declare_use_joystick_arg,
+            declare_use_keyboard_arg,
             declare_use_navigation_arg,
             declare_log_level_arg,
             # Launchers
