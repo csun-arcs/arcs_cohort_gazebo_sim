@@ -243,7 +243,7 @@ def generate_launch_description():
         package="twist_mux",
         executable="twist_mux",
         parameters=[default_twist_mux_params_path, {"use_sim_time": use_sim_time}],
-        remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_nav")],
+        remappings=[("cmd_vel_out", "diff_cont/cmd_vel_nav")],
         arguments=["--ros-args", "--log-level", log_level],
     )
 
@@ -263,7 +263,7 @@ def generate_launch_description():
         package="twist_mux",
         executable="twist_mux",
         parameters=[default_twist_mux_params_path, {"use_sim_time": use_sim_time}],
-        remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped")],
+        remappings=[("cmd_vel_out", "diff_cont/cmd_vel_unstamped")],
         arguments=["--ros-args", "--log-level", log_level],
     )
 
@@ -283,7 +283,7 @@ def generate_launch_description():
         executable="teleop_node",
         name="teleop_node",
         parameters=[default_joystick_params_path, {"use_sim_time": use_sim_time}],
-        remappings=[("/cmd_vel", "/diff_cont/cmd_vel_unstamped")],
+        remappings=[("cmd_vel", "diff_cont/cmd_vel_unstamped")],
         arguments=["--ros-args", "--log-level", log_level],
     )
 
@@ -304,8 +304,8 @@ def generate_launch_description():
         executable="twist_stamper",
         parameters=[{"use_sim_time": use_sim_time}],
         remappings=[
-            ("/cmd_vel_in", "/diff_cont/cmd_vel_unstamped"),
-            ("/cmd_vel_out", "/diff_cont/cmd_vel"),
+            ("cmd_vel_in", "diff_cont/cmd_vel_unstamped"),
+            ("cmd_vel_out", "diff_cont/cmd_vel"),
         ],
         arguments=["--ros-args", "--log-level", log_level],
     )
@@ -321,12 +321,12 @@ def generate_launch_description():
         ],
         remappings=[
             (
-                "/cmd_vel",
+                "cmd_vel",
                 PythonExpression(
                     [
-                        "'/diff_cont/cmd_vel' if '",
+                        "'diff_cont/cmd_vel' if '",
                         use_ros2_control,
-                        "' == 'true' else '/diff_cont/cmd_vel_unstamped'",
+                        "' == 'true' else 'diff_cont/cmd_vel_unstamped'",
                     ]
                 ),
             )
@@ -351,8 +351,8 @@ def generate_launch_description():
         executable="twist_unstamper",
         parameters=[{"use_sim_time": use_sim_time}],
         remappings=[
-            ("/cmd_vel_in", "/diff_cont/cmd_vel"),
-            ("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped"),
+            ("cmd_vel_in", "diff_cont/cmd_vel"),
+            ("cmd_vel_out", "diff_cont/cmd_vel_unstamped"),
         ],
         arguments=["--ros-args", "--log-level", log_level],
     )
@@ -374,8 +374,8 @@ def generate_launch_description():
         executable="twist_stamper",
         parameters=[{"use_sim_time": use_sim_time}],
         remappings=[
-            ("/cmd_vel_in", "/diff_cont/cmd_vel_nav"),
-            ("/cmd_vel_out", "/diff_cont/cmd_vel"),
+            ("cmd_vel_in", "diff_cont/cmd_vel_nav"),
+            ("cmd_vel_out", "diff_cont/cmd_vel"),
         ],
         arguments=["--ros-args", "--log-level", log_level],
     )
