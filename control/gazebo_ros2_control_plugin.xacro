@@ -46,8 +46,7 @@
 
         <gazebo>
             <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="gz_ros2_control-system">
-                <parameters>$(find arcs_cohort_gazebo_sim)/config/ros2_control_params.yaml</parameters>
-                <parameters>$(find arcs_cohort_gazebo_sim)/config/gazebo_ros2_control_sim.yaml</parameters>
+                <parameters>$(find arcs_cohort_gazebo_sim)/config/gazebo_ros2_control_params.yaml</parameters>
             </plugin>
         </gazebo>
     </xacro:macro>

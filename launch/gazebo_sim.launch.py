@@ -227,49 +227,9 @@ def generate_launch_description():
         arguments=["--ros-args", "--log-level", log_level],
     )
 
-    # Twist Mux when using ros2 control plugin
-    twist_mux_ros2_control_node = Node(
-        condition=IfCondition(
-            PythonExpression(
-                [
-                    "'",
-                    use_navigation,
-                    "' == 'true' and '",
-                    use_ros2_control,
-                    "' == 'true'",
-                ]
-            )
-        ),
-        package="twist_mux",
-        executable="twist_mux",
-        parameters=[default_twist_mux_params_path, {"use_sim_time": use_sim_time}],
-        remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_nav")],
-        arguments=["--ros-args", "--log-level", log_level],
-    )
-
-    # Twist Mux when using differential drive plugin
-    twist_mux_normal_node = Node(
-        condition=IfCondition(
-            PythonExpression(
-                [
-                    "'",
-                    use_navigation,
-                    "' == 'true' and '",
-                    use_ros2_control,
-                    "' == 'false'",
-                ]
-            )
-        ),
-        package="twist_mux",
-        executable="twist_mux",
-        parameters=[default_twist_mux_params_path, {"use_sim_time": use_sim_time}],
-        remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped")],
-        arguments=["--ros-args", "--log-level", log_level],
-    )
-
     # Jostick Node
     joy_node = Node(
-        condition=IfCondition(use_joystick),
+        condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'true'"])),
         package="joy",
         executable="joy_node",
         parameters=[default_joystick_params_path],
@@ -283,29 +243,19 @@ def generate_launch_description():
         executable="teleop_node",
         name="teleop_node",
         parameters=[default_joystick_params_path, {"use_sim_time": use_sim_time}],
-        remappings=[("/cmd_vel", "/diff_cont/cmd_vel_unstamped")],
+        remappings=[("cmd_vel", "diff_cont/cmd_vel_joy_unstamped")],
         arguments=["--ros-args", "--log-level", log_level],
     )
 
-    # Twist stamper for joystick teleop node when ros2 control plugin is enabled
+    # Twist stamper for joystick teleop node
     teleop_joy_stamper_node = Node(
-        condition=IfCondition(
-            PythonExpression(
-                [
-                    "'",
-                    use_ros2_control,
-                    "' == 'true' and '",
-                    use_joystick,
-                    "' == 'true'",
-                ]
-            )
-        ),
+        condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'true'"])),
         package="twist_stamper",
         executable="twist_stamper",
         parameters=[{"use_sim_time": use_sim_time}],
         remappings=[
-            ("/cmd_vel_in", "/diff_cont/cmd_vel_unstamped"),
-            ("/cmd_vel_out", "/diff_cont/cmd_vel"),
+            ("cmd_vel_in", "diff_cont/cmd_vel_joy_unstamped"),
+            ("cmd_vel_out", "diff_cont/cmd_vel"),
         ],
         arguments=["--ros-args", "--log-level", log_level],
     )
@@ -316,68 +266,8 @@ def generate_launch_description():
         package="teleop_twist_keyboard",
         executable="teleop_twist_keyboard",
         prefix="xterm -e",
-        parameters=[
-            {"stamped": PythonExpression(["'", use_ros2_control, "' == 'true'"])}
-        ],
-        remappings=[
-            (
-                "/cmd_vel",
-                PythonExpression(
-                    [
-                        "'/diff_cont/cmd_vel' if '",
-                        use_ros2_control,
-                        "' == 'true' else '/diff_cont/cmd_vel_unstamped'",
-                    ]
-                ),
-            )
-        ],
-        arguments=["--ros-args", "--log-level", log_level],
-    )
-
-    # Twist unstamper for keyboard to pass into twist mux for Nav2 waypoint navigation
-    teleop_keyboard_unstamper_node = Node(
-        condition=IfCondition(
-            PythonExpression(
-                [
-                    "'",
-                    use_ros2_control,
-                    "' == 'true' and '",
-                    use_keyboard,
-                    "' == 'true'",
-                ]
-            )
-        ),
-        package="twist_stamper",
-        executable="twist_unstamper",
-        parameters=[{"use_sim_time": use_sim_time}],
-        remappings=[
-            ("/cmd_vel_in", "/diff_cont/cmd_vel"),
-            ("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped"),
-        ],
-        arguments=["--ros-args", "--log-level", log_level],
-    )
-
-    # Twist mux stamper
-    twist_mux_stamper_node = Node(
-        condition=IfCondition(
-            PythonExpression(
-                [
-                    "'",
-                    use_navigation,
-                    "' == 'true' and '",
-                    use_ros2_control,
-                    "' == 'true'",
-                ]
-            )
-        ),
-        package="twist_stamper",
-        executable="twist_stamper",
-        parameters=[{"use_sim_time": use_sim_time}],
-        remappings=[
-            ("/cmd_vel_in", "/diff_cont/cmd_vel_nav"),
-            ("/cmd_vel_out", "/diff_cont/cmd_vel"),
-        ],
-        arguments=["--ros-args", "--log-level", log_level],
+        parameters=[{"stamped": True}],
+        remappings=[("cmd_vel", "diff_cont/cmd_vel")],
     )
 
     # Gazebo launch
@@ -554,13 +444,9 @@ def generate_launch_description():
             jsp_node,
             jsp_gui_node,
             teleop_keyboard_node,
-            twist_mux_ros2_control_node,
-            twist_mux_normal_node,
             joy_node,
             teleop_joy_node,
             teleop_joy_stamper_node,
-            teleop_keyboard_unstamper_node,
-            twist_mux_stamper_node,
             diff_drive_spawner_node,
             joint_broad_spawner_node,
             start_gazebo_ros_bridge_node,
