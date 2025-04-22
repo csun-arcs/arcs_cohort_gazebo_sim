@@ -61,12 +61,13 @@ def generate_launch_description():
         default_value=default_model_path,
         description="Relative path to the robot model file",
     )
-    declare_robot_name_arg = DeclareLaunchArgument(
-        "robot_name",
+    declare_prefix_arg = DeclareLaunchArgument(
+        "prefix",
         default_value="",
         description=(
-            "Name of the robot (specifying this will add the "
-            "robot name prefix to joints, links, etc. in the robot model)."
+            "A prefix for the names of joints, links, etc. in the robot model). "
+            "E.g. 'base_link' will become 'cohort1_base_link' if prefix "
+            "is set to 'cohort1'."
         ),
     )
     declare_camera_resolution_arg = DeclareLaunchArgument(
@@ -82,11 +83,11 @@ def generate_launch_description():
     # due to double-namespacing issue when launcher is called from an upstream
     # launcher.
     #
-    # declare_namespace_arg = DeclareLaunchArgument(
-    #     "namespace",
-    #     default_value="",
-    #     description="Namespace under which to bring up camera image bridges."
-    # )
+    declare_namespace_arg = DeclareLaunchArgument(
+        "namespace",
+        default_value="",
+        description="Namespace under which to bring up camera image bridges."
+    )
     declare_use_rsp_arg = DeclareLaunchArgument(
         "use_rsp", default_value="true", description="Launch robot_state_publisher"
     )
@@ -139,9 +140,9 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time")
     model_package = LaunchConfiguration("model_package")
     model_file = LaunchConfiguration("model_file")
-    robot_name = LaunchConfiguration("robot_name")
+    prefix = LaunchConfiguration("prefix")
     camera_resolution = LaunchConfiguration("camera_resolution")
-    # namespace = LaunchConfiguration("namespace")
+    namespace = LaunchConfiguration("namespace")
     use_rsp = LaunchConfiguration("use_rsp")
     use_jsp = LaunchConfiguration("use_jsp")
     use_jsp_gui = LaunchConfiguration("use_jsp_gui")
@@ -153,28 +154,14 @@ def generate_launch_description():
     use_navigation = LaunchConfiguration("use_navigation")
     log_level = LaunchConfiguration("log_level")
 
-    # Compute the robot prefix only if a robot name is provided
-    # This expression will evaluate to, for example, "cohort_" if
-    # robot_name is "cohort", or to an empty string if robot_name is empty.
-    robot_prefix = PythonExpression(
-        ["'", robot_name, "_' if '", robot_name, "' else ''"]
-    )
-    # Compute the prefix argument only if a robot_name/robot_prefix is provided.
-    # This expression will evaluate to, for example, "prefix:=cohort_" if
-    # robot_prefix is "cohort_", or to an empty string if robot_prefix is empty.
-    robot_prefix_arg = PythonExpression(
-        ["('prefix:=' + '", robot_prefix, "') if '", robot_prefix, "' else ''"]
-    )
-
     # Robot description from Xacro, including the conditional robot name prefix.
     robot_description = Command(
         [
             "xacro ",
             PathJoinSubstitution([FindPackageShare(model_package), model_file]),
-            " ",
-            robot_prefix_arg,
-            " ",
-            "camera_resolution:=",
+            " prefix:=",
+            prefix,
+            " camera_resolution:=",
             camera_resolution,
             " use_lidar:=",
             use_lidar,
@@ -443,7 +430,8 @@ def generate_launch_description():
         executable="parameter_bridge",
         parameters=[{"config_file": bridge_params}],
         output="screen",
-        arguments=["--ros-args", "--log-level", log_level],
+        arguments=["--ros-args", "-p", "expand_gz_topic_names:=true",
+                   "--ros-args", "--log-level", log_level],
     )
 
     # Image bridge for left camera image
@@ -451,20 +439,29 @@ def generate_launch_description():
         name="left_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/left_camera/image", "--ros-args", "--log-level", log_level],
+        arguments=[[namespace, "/camera/left_camera/image"], "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
-            ("camera/left_camera/image", "camera/left_camera/image"),
             (
-                "camera/left_camera/image/compressed",
+                [namespace, "/camera/left_camera/image"],
+                "camera/left_camera/image",
+            ),
+            (
+                [namespace, "/camera/left_camera/image/compressed"],
                 "camera/left_camera/image/compressed",
             ),
             (
-                "camera/left_camera/image/compressedDepth",
+                [namespace, "/camera/left_camera/image/compressedDepth"],
                 "camera/left_camera/image/compressedDepth",
             ),
-            ("camera/left_camera/image/theora", "camera/left_camera/image/theora"),
-            ("camera/left_camera/image/zstd", "camera/left_camera/image/zstd"),
+            (
+                [namespace, "camera/left_camera/image/theora"],
+                "camera/left_camera/image/theora"
+            ),
+            (
+                [namespace, "/camera/left_camera/image/zstd"],
+                "camera/left_camera/image/zstd"
+            ),
         ],
     )
 
@@ -473,20 +470,29 @@ def generate_launch_description():
         name="right_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/right_camera/image", "--ros-args", "--log-level", log_level],
+        arguments=[[namespace, "/camera/right_camera/image"], "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
-            ("camera/right_camera/image", "camera/right_camera/image"),
             (
-                "camera/right_camera/image/compressed",
+                [namespace, "/camera/right_camera/image"],
+                "camera/right_camera/image",
+            ),
+            (
+                [namespace, "/camera/right_camera/image/compressed"],
                 "camera/right_camera/image/compressed",
             ),
             (
-                "camera/right_camera/image/compressedDepth",
+                [namespace, "/camera/right_camera/image/compressedDepth"],
                 "camera/right_camera/image/compressedDepth",
             ),
-            ("camera/right_camera/image/theora", "camera/right_camera/image/theora"),
-            ("camera/right_camera/image/zstd", "camera/right_camera/image/zstd"),
+            (
+                [namespace, "/camera/right_camera/image/theora"],
+                "camera/right_camera/image/theora"
+            ),
+            (
+                [namespace, "/camera/right_camera/image/zstd"],
+                "camera/right_camera/image/zstd"
+            ),
         ],
     )
 
@@ -495,29 +501,26 @@ def generate_launch_description():
         name="left_camera_depth_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=[
-            "camera/left_camera/depth_image",
-            "--ros-args",
-            "--log-level",
-            log_level,
-        ],
+        arguments=[[namespace, "/camera/left_camera/depth_image"], "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
-            ("camera/left_camera/depth_image", "camera/left_camera/depth_image"),
             (
+                [namespace, "/camera/left_camera/depth_image"],
+                "camera/left_camera/depth_image"),
+            (
+                [namespace, "/camera/left_camera/depth_image/compressed"],
                 "camera/left_camera/depth_image/compressed",
-                "camera/left_camera/depth_image/compressed",
             ),
             (
+                [namespace, "/camera/left_camera/depth_image/compressedDepth"],
                 "camera/left_camera/depth_image/compressedDepth",
-                "camera/left_camera/depth_image/compressedDepth",
             ),
             (
-                "camera/left_camera/depth_image/theora",
+                [namespace, "/camera/left_camera/depth_image/theora"],
                 "camera/left_camera/depth_image/theora",
             ),
             (
-                "camera/left_camera/depth_image/zstd",
+                [namespace, "/camera/left_camera/depth_image/zstd"],
                 "camera/left_camera/depth_image/zstd",
             ),
         ],
@@ -530,9 +533,9 @@ def generate_launch_description():
             declare_use_sim_time_arg,
             declare_model_package_arg,
             declare_model_file_arg,
-            declare_robot_name_arg,
             declare_camera_resolution_arg,
-            # declare_namespace_arg,
+            declare_prefix_arg,
+            declare_namespace_arg,
             declare_use_rsp_arg,
             declare_use_jsp_arg,
             declare_use_jsp_gui_arg,

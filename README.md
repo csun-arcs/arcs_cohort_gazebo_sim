@@ -79,9 +79,9 @@ The launch file, located in the `launch/` folder (`gazebo_sim.launch.py`), is us
   - **Default**: `"description/robot.urdf.xacro"`
   - **Example**: `model_file:=another_folder/another_model.urdf.xacro`
 
-- **`robot_name`**: Specifies the name of the robot, useful for multi-robot scenarios or namespaces.
-  - **Default**: `""`
-  - **Example**: `robot_name:=my_robot`
+- **`prefix`**: A prefix for the names of joints, links, etc. in the robot model). E.g. 'base_link' will become 'cohort1_base_link' if prefix is set to 'cohort1'.
+  - **Default**: `''`
+  - **Example**: `prefix:=my_robot`
 
 - **`camera_resolution`**: Sets the resolution profile for the simulated Stereolabs Zed camera. Options: `"HD2K"`, `"HD1080"`, `"HD720"`, `"VGA"`.
   - **Default**: `"VGA"`
