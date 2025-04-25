@@ -128,13 +128,13 @@ The package supports two teleoperation modes:
   - Enabled with `use_joystick:=true`.
   - Uses `joy_node` and `teleop_twist_joy` nodes.
   - Configured via `config/gazebo_joystick_teleop.yaml` (e.g., axis mappings, velocity scaling).
-  - Publishes velocity commands to `/diff_cont/cmd_vel_unstamped` (or `/diff_cont/cmd_vel` if `use_ros2_control:=true`).
+  - Publishes velocity commands to `diff_cont/cmd_vel_unstamped` (or `diff_cont/cmd_vel` if `use_ros2_control:=true`).
   - Requires a compatible joystick device.
 
 - **Keyboard**:
   - Enabled when `use_joystick:=false`.
   - Uses `teleop_twist_keyboard` node, launched in a new terminal via `xterm`.
-  - Publishes velocity commands to `/diff_cont/cmd_vel_unstamped` (or `/diff_cont/cmd_vel` if `use_ros2_control:=true`).
+  - Publishes velocity commands to `diff_cont/cmd_vel_unstamped` (or `diff_cont/cmd_vel` if `use_ros2_control:=true`).
   - Control the robot using arrow keys (refer to `teleop_twist_keyboard` documentation for key bindings).
 
 ---
@@ -146,8 +146,8 @@ Navigation support is enabled with `use_navigation:=true`, which launches the `t
 - Configured via `arcs_cohort_navigation/config/twist_mux.yaml`.
 - Combines velocity commands from multiple sources (e.g., teleoperation, navigation stack).
 - Remaps output to:
-  - `/diff_cont/cmd_vel_nav` (stamped as `/diff_cont/cmd_vel` if `use_ros2_control:=true`).
-  - `/diff_cont/cmd_vel_unstamped` (if `use_ros2_control:=false`).
+  - `diff_cont/cmd_vel_nav` (stamped as `diff_cont/cmd_vel` if `use_ros2_control:=true`).
+  - `diff_cont/cmd_vel_unstamped` (if `use_ros2_control:=false`).
 - Integrates with the `arcs_cohort_navigation` package for waypoint navigation or autonomous tasks.
 
 ---
