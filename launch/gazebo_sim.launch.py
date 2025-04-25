@@ -43,13 +43,24 @@ def generate_launch_description():
     default_log_level = "INFO"
 
     # Declare launch arguments
+    declare_namespace_arg = DeclareLaunchArgument(
+        "namespace",
+        default_value="",
+        description="Namespace under which to bring up nodes, topics, etc.",
+    )
+    declare_prefix_arg = DeclareLaunchArgument(
+        "prefix",
+        default_value="",
+        description=(
+            "A prefix for the names of joints, links, etc. in the robot model). "
+            "E.g. 'base_link' will become 'cohort1_base_link' if prefix "
+            "is set to 'cohort1'."
+        ),
+    )
     declare_world_arg = DeclareLaunchArgument(
         "world",
         default_value=default_world_path,
         description="Path to the world file to load",
-    )
-    declare_use_sim_time_arg = DeclareLaunchArgument(
-        "use_sim_time", default_value="true", description="Use simulation time"
     )
     declare_model_package_arg = DeclareLaunchArgument(
         "model_package",
@@ -61,15 +72,6 @@ def generate_launch_description():
         default_value=default_model_path,
         description="Relative path to the robot model file",
     )
-    declare_prefix_arg = DeclareLaunchArgument(
-        "prefix",
-        default_value="",
-        description=(
-            "A prefix for the names of joints, links, etc. in the robot model). "
-            "E.g. 'base_link' will become 'cohort1_base_link' if prefix "
-            "is set to 'cohort1'."
-        ),
-    )
     declare_camera_resolution_arg = DeclareLaunchArgument(
         "camera_resolution",
         default_value="VGA",
@@ -79,14 +81,18 @@ def generate_launch_description():
             '"HD720" (1280x720) or "VGA" (672x376).'
         ),
     )
-    # NOTE: Removing the namespace parameter from the Gazebo launcher for now
-    # due to double-namespacing issue when launcher is called from an upstream
-    # launcher.
-    #
-    declare_namespace_arg = DeclareLaunchArgument(
-        "namespace",
-        default_value="",
-        description="Namespace under which to bring up camera image bridges."
+    declare_lidar_update_rate_arg = DeclareLaunchArgument(
+        "lidar_update_rate",
+        default_value="30",
+        description="Set the update rate of the LiDAR sensor.",
+    )
+    declare_log_level_arg = DeclareLaunchArgument(
+        "log_level",
+        default_value=default_log_level,
+        description="Set the log level for nodes.",
+    )
+    declare_use_sim_time_arg = DeclareLaunchArgument(
+        "use_sim_time", default_value="true", description="Use simulation time"
     )
     declare_use_rsp_arg = DeclareLaunchArgument(
         "use_rsp", default_value="true", description="Launch robot_state_publisher"
@@ -103,11 +109,6 @@ def generate_launch_description():
         "use_lidar",
         default_value="false",
         description="If true, include the lidar in the robot description",
-    )
-    declare_lidar_update_rate_arg = DeclareLaunchArgument(
-        "lidar_update_rate",
-        default_value="30",
-        description="Set the update rate of the LiDAR sensor.",
     )
     declare_use_ros2_control_arg = DeclareLaunchArgument(
         "use_ros2_control",
@@ -129,30 +130,25 @@ def generate_launch_description():
         default_value="false",
         description="Set the argument to true if you want to launch twist mux",
     )
-    declare_log_level_arg = DeclareLaunchArgument(
-        "log_level",
-        default_value=default_log_level,
-        description="Set the log level for nodes.",
-    )
 
     # Launch configurations
+    namespace = LaunchConfiguration("namespace")
+    prefix = LaunchConfiguration("prefix")
     world = LaunchConfiguration("world")
-    use_sim_time = LaunchConfiguration("use_sim_time")
     model_package = LaunchConfiguration("model_package")
     model_file = LaunchConfiguration("model_file")
-    prefix = LaunchConfiguration("prefix")
     camera_resolution = LaunchConfiguration("camera_resolution")
-    namespace = LaunchConfiguration("namespace")
+    lidar_update_rate = LaunchConfiguration("lidar_update_rate")
+    log_level = LaunchConfiguration("log_level")
+    use_sim_time = LaunchConfiguration("use_sim_time")
     use_rsp = LaunchConfiguration("use_rsp")
     use_jsp = LaunchConfiguration("use_jsp")
     use_jsp_gui = LaunchConfiguration("use_jsp_gui")
     use_lidar = LaunchConfiguration("use_lidar")
-    lidar_update_rate = LaunchConfiguration("lidar_update_rate")
     use_ros2_control = LaunchConfiguration("use_ros2_control")
     use_joystick = LaunchConfiguration("use_joystick")
     use_keyboard = LaunchConfiguration("use_keyboard")
     use_navigation = LaunchConfiguration("use_navigation")
-    log_level = LaunchConfiguration("log_level")
 
     # Robot description from Xacro, including the conditional robot name prefix.
     robot_description = Command(
@@ -322,6 +318,9 @@ def generate_launch_description():
         output="screen",
         arguments=["--ros-args", "-p", "expand_gz_topic_names:=true",
                    "--ros-args", "--log-level", log_level],
+        remappings=[
+            ("/tf", "tf"),
+        ],
     )
 
     # Image bridge for left camera image
@@ -345,7 +344,7 @@ def generate_launch_description():
                 "camera/left_camera/image/compressedDepth",
             ),
             (
-                [namespace, "camera/left_camera/image/theora"],
+                [namespace, "/camera/left_camera/image/theora"],
                 "camera/left_camera/image/theora"
             ),
             (
@@ -419,23 +418,23 @@ def generate_launch_description():
     return LaunchDescription(
         [
             # Declare launch arguments
+            declare_namespace_arg,
+            declare_prefix_arg,
             declare_world_arg,
-            declare_use_sim_time_arg,
             declare_model_package_arg,
             declare_model_file_arg,
             declare_camera_resolution_arg,
-            declare_prefix_arg,
-            declare_namespace_arg,
+            declare_lidar_update_rate_arg,
+            declare_log_level_arg,
+            declare_use_sim_time_arg,
             declare_use_rsp_arg,
             declare_use_jsp_arg,
             declare_use_jsp_gui_arg,
             declare_use_lidar_arg,
-            declare_lidar_update_rate_arg,
             declare_use_ros2_control_arg,
             declare_use_joystick_arg,
             declare_use_keyboard_arg,
             declare_use_navigation_arg,
-            declare_log_level_arg,
             # Launchers
             gazebo_launch,
             # Nodes
