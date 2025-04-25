@@ -31,14 +31,11 @@ def generate_launch_description():
         "worlds",
         "test_obstacles_world_1.world",
     )
-    default_model_path = "description/robot.urdf.xacro"
+    default_model_path = "description/robot.gazebo.xacro"
     default_joystick_params_path = os.path.join(
         get_package_share_directory(pkg_gazebo_sim),
         "config",
         "gazebo_joystick_teleop.yaml",
-    )
-    default_twist_mux_params_path = os.path.join(
-        get_package_share_directory(pkg_nav), "config", "twist_mux.yaml"
     )
     default_log_level = "INFO"
 
@@ -64,7 +61,7 @@ def generate_launch_description():
     )
     declare_model_package_arg = DeclareLaunchArgument(
         "model_package",
-        default_value=pkg_description,
+        default_value=pkg_gazebo_sim,
         description="Package containing the robot model",
     )
     declare_model_file_arg = DeclareLaunchArgument(
@@ -83,7 +80,7 @@ def generate_launch_description():
     )
     declare_lidar_update_rate_arg = DeclareLaunchArgument(
         "lidar_update_rate",
-        default_value="30",
+        default_value="10",
         description="Set the update rate of the LiDAR sensor.",
     )
     declare_log_level_arg = DeclareLaunchArgument(
@@ -148,13 +145,14 @@ def generate_launch_description():
     use_ros2_control = LaunchConfiguration("use_ros2_control")
     use_joystick = LaunchConfiguration("use_joystick")
     use_keyboard = LaunchConfiguration("use_keyboard")
-    use_navigation = LaunchConfiguration("use_navigation")
 
     # Robot description from Xacro, including the conditional robot name prefix.
     robot_description = Command(
         [
             "xacro ",
             PathJoinSubstitution([FindPackageShare(model_package), model_file]),
+            " namespace:=",
+            namespace,
             " prefix:=",
             prefix,
             " camera_resolution:=",

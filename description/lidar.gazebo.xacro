@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
+
+    <xacro:macro name="lidar_description_gazebo" params="namespace prefix lidar_update_rate=10">
+
+        <!-- Properties -->
+        <xacro:if value="${prefix != ''}">
+            <xacro:property name="prefix_" value="${prefix}_"/>
+        </xacro:if>
+        <xacro:if value="${prefix == ''}">
+            <xacro:property name="prefix_" value=""/>
+        </xacro:if>
+
+        <xacro:property name="PI" value="3.1415926535897931" />
+
+        <!-- LiDAR Gazebo -->
+        <gazebo reference="${prefix_}laser_frame">
+            <sensor name="laser" type="gpu_lidar">
+                <pose> 0 0 0 0 0 0 </pose>
+                <visualize>false</visualize>
+                <update_rate>$(arg lidar_update_rate)</update_rate>
+                <topic>lidar/scan</topic>
+                <gz_frame_id>laser_frame</gz_frame_id>
+                <lidar>
+                    <scan>
+                        <horizontal>
+                            <samples>1875</samples>
+                            <resolution>1</resolution>
+                            <min_angle>-${PI}</min_angle>
+                            <max_angle>${PI}</max_angle>
+                        </horizontal>
+                        <vertical>
+                            <samples>16</samples>
+                            <resolution>1</resolution>
+                            <min_angle>-${15.0*PI/180.0}</min_angle>
+                            <max_angle>${15.0*PI/180.0}</max_angle>
+                        </vertical>
+                    </scan>
+                    <range>
+                        <min>0.3</min>
+                        <max>131.0</max>
+                        <resolution>0.001</resolution>
+                    </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.0</stddev>
+                    </noise>
+                </lidar>
+            </sensor>
+        </gazebo>
+    </xacro:macro>
+
+</robot>
