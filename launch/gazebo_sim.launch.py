@@ -7,9 +7,9 @@ from launch.actions import (
     ExecuteProcess,
     LogInfo,
     GroupAction,
+    SetEnvironmentVariable,
 )
 from launch.conditions import IfCondition
-from launch.conditions import UnlessCondition
 
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
@@ -47,7 +47,12 @@ def generate_launch_description():
         "gazebo_joystick_teleop.yaml",
     )
     default_log_level = "INFO"
-
+    default_model_resource_path = os.path.join(
+        get_package_share_directory(pkg_gazebo_sim), "models"
+    )
+    set_gz_sim_resource_path = SetEnvironmentVariable(
+        name="GZ_SIM_RESOURCE_PATH", value=default_model_resource_path
+    )
     # Declare launch arguments
     declare_namespace_arg = DeclareLaunchArgument(
         "namespace",
@@ -487,6 +492,8 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            # Set gz sim resource path environment variable
+            set_gz_sim_resource_path,
             # Declare launch arguments
             declare_namespace_arg,
             declare_prefix_arg,
