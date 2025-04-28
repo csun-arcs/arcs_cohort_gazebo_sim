@@ -5,7 +5,7 @@
     <xacro:arg name="camera_model" default="zedm" />
     <xacro:arg name="camera_resolution" default="HD720" />
     <xacro:arg name="use_lidar" default="false" />
-    <xacro:arg name="lidar_update_rate" default="30" />
+    <xacro:arg name="lidar_update_rate" default="10" />
     <xacro:arg name="use_ros2_control" default="false" />
     
     <!-- Include Gazebo files -->
