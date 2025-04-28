@@ -1,15 +1,25 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
 
-    <xacro:property name="PI" value="3.1415926535897931" />
-    <xacro:macro name="lidar_description_gazebo" params="prefix lidar_update_rate=10">
+    <xacro:macro name="lidar_description_gazebo" params="namespace prefix lidar_update_rate=10">
+
+        <!-- Properties -->
+        <xacro:if value="${prefix != ''}">
+            <xacro:property name="prefix_" value="${prefix}_"/>
+        </xacro:if>
+        <xacro:if value="${prefix == ''}">
+            <xacro:property name="prefix_" value=""/>
+        </xacro:if>
+
+        <xacro:property name="PI" value="3.1415926535897931" />
+
         <!-- LiDAR Gazebo -->
-        <gazebo reference="${prefix}laser_frame">
+        <gazebo reference="${prefix_}laser_frame">
             <sensor name="laser" type="gpu_lidar">
                 <pose> 0 0 0 0 0 0 </pose>
                 <visualize>false</visualize>
                 <update_rate>$(arg lidar_update_rate)</update_rate>
-                <topic>lidar/scan</topic>
+                <topic>${namespace}/lidar/scan</topic>
                 <gz_frame_id>laser_frame</gz_frame_id>
                 <lidar>
                     <scan>

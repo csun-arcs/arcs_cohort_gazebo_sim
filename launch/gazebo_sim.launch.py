@@ -4,6 +4,9 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
+    ExecuteProcess,
+    LogInfo,
+    GroupAction,
     SetEnvironmentVariable,
 )
 from launch.conditions import IfCondition
@@ -15,7 +18,7 @@ from launch.substitutions import (
     PathJoinSubstitution,
     PythonExpression,
 )
-from launch_ros.actions import Node
+from launch_ros.actions import Node, PushRosNamespace
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -26,6 +29,12 @@ def generate_launch_description():
     pkg_nav = "arcs_cohort_navigation"
 
     # Defaults
+    default_ros2_control_params_file_template = os.path.join(
+        get_package_share_directory(pkg_gazebo_sim), "config", "gazebo_ros2_control_params.yaml.template"
+    )
+    default_ekf_params_file = os.path.join(
+        get_package_share_directory(pkg_gazebo_sim), "config", "gazebo_ros2_control_params.yaml"
+    )
     default_world_path = os.path.join(
         get_package_share_directory(pkg_gazebo_sim),
         "worlds",
@@ -45,13 +54,34 @@ def generate_launch_description():
         name="GZ_SIM_RESOURCE_PATH", value=default_model_resource_path
     )
     # Declare launch arguments
+    declare_namespace_arg = DeclareLaunchArgument(
+        "namespace",
+        default_value="",
+        description="Namespace under which to bring up nodes, topics, etc.",
+    )
+    declare_prefix_arg = DeclareLaunchArgument(
+        "prefix",
+        default_value="",
+        description=(
+            "A prefix for the names of joints, links, etc. in the robot model). "
+            "E.g. 'base_link' will become 'cohort1_base_link' if prefix "
+            "is set to 'cohort1'."
+        ),
+    )
+    declare_ros2_control_params_template_arg = DeclareLaunchArgument(
+        "ros2_control_params_template",
+        default_value=default_ros2_control_params_file_template,
+        description="Path to the params file template from which to generate the params file for ros2_control.",
+    )
+    declare_ros2_control_params_arg = DeclareLaunchArgument(
+        "ros2_control_params",
+        default_value=default_ekf_params_file,
+        description="Path to the params file for ros2_control.",
+    )
     declare_world_arg = DeclareLaunchArgument(
         "world",
         default_value=default_world_path,
         description="Path to the world file to load",
-    )
-    declare_use_sim_time_arg = DeclareLaunchArgument(
-        "use_sim_time", default_value="true", description="Use simulation time"
     )
     declare_model_package_arg = DeclareLaunchArgument(
         "model_package",
@@ -63,14 +93,6 @@ def generate_launch_description():
         default_value=default_model_path,
         description="Relative path to the robot model file",
     )
-    declare_robot_name_arg = DeclareLaunchArgument(
-        "robot_name",
-        default_value="",
-        description=(
-            "Name of the robot (specifying this will add the "
-            "robot name prefix to joints, links, etc. in the robot model)."
-        ),
-    )
     declare_camera_resolution_arg = DeclareLaunchArgument(
         "camera_resolution",
         default_value="VGA",
@@ -80,15 +102,19 @@ def generate_launch_description():
             '"HD720" (1280x720) or "VGA" (672x376).'
         ),
     )
-    # NOTE: Removing the namespace parameter from the Gazebo launcher for now
-    # due to double-namespacing issue when launcher is called from an upstream
-    # launcher.
-    #
-    # declare_namespace_arg = DeclareLaunchArgument(
-    #     "namespace",
-    #     default_value="",
-    #     description="Namespace under which to bring up camera image bridges."
-    # )
+    declare_lidar_update_rate_arg = DeclareLaunchArgument(
+        "lidar_update_rate",
+        default_value="10",
+        description="Set the update rate of the LiDAR sensor.",
+    )
+    declare_log_level_arg = DeclareLaunchArgument(
+        "log_level",
+        default_value=default_log_level,
+        description="Set the log level for nodes.",
+    )
+    declare_use_sim_time_arg = DeclareLaunchArgument(
+        "use_sim_time", default_value="true", description="Use simulation time"
+    )
     declare_use_rsp_arg = DeclareLaunchArgument(
         "use_rsp", default_value="true", description="Launch robot_state_publisher"
     )
@@ -104,11 +130,6 @@ def generate_launch_description():
         "use_lidar",
         default_value="false",
         description="If true, include the lidar in the robot description",
-    )
-    declare_lidar_update_rate_arg = DeclareLaunchArgument(
-        "lidar_update_rate",
-        default_value="30",
-        description="Set the update rate of the LiDAR sensor.",
     )
     declare_use_ros2_control_arg = DeclareLaunchArgument(
         "use_ros2_control",
@@ -130,41 +151,75 @@ def generate_launch_description():
         default_value="false",
         description="Set the argument to true if you want to launch twist mux",
     )
-    declare_log_level_arg = DeclareLaunchArgument(
-        "log_level",
-        default_value=default_log_level,
-        description="Set the log level for nodes.",
+    declare_use_ros2_control_params_template_arg = DeclareLaunchArgument(
+        "use_ros2_control_params_template",
+        default_value="true",
+        description="If true, generate the ros2_control params from the specified ros2_control params template.",
     )
 
     # Launch configurations
+    namespace = LaunchConfiguration("namespace")
+    prefix = LaunchConfiguration("prefix")
+    ros2_control_params_template = LaunchConfiguration("ros2_control_params_template")
+    ros2_control_params = LaunchConfiguration("ros2_control_params")
     world = LaunchConfiguration("world")
-    use_sim_time = LaunchConfiguration("use_sim_time")
     model_package = LaunchConfiguration("model_package")
     model_file = LaunchConfiguration("model_file")
-    robot_name = LaunchConfiguration("robot_name")
     camera_resolution = LaunchConfiguration("camera_resolution")
-    # namespace = LaunchConfiguration("namespace")
+    lidar_update_rate = LaunchConfiguration("lidar_update_rate")
+    log_level = LaunchConfiguration("log_level")
+    use_sim_time = LaunchConfiguration("use_sim_time")
     use_rsp = LaunchConfiguration("use_rsp")
     use_jsp = LaunchConfiguration("use_jsp")
     use_jsp_gui = LaunchConfiguration("use_jsp_gui")
     use_lidar = LaunchConfiguration("use_lidar")
-    lidar_update_rate = LaunchConfiguration("lidar_update_rate")
     use_ros2_control = LaunchConfiguration("use_ros2_control")
     use_joystick = LaunchConfiguration("use_joystick")
     use_keyboard = LaunchConfiguration("use_keyboard")
-    log_level = LaunchConfiguration("log_level")
+    use_ros2_control_params_template = LaunchConfiguration("use_ros2_control_params_template")
 
-    # Compute the robot prefix only if a robot name is provided
-    # This expression will evaluate to, for example, "cohort_" if
-    # robot_name is "cohort", or to an empty string if robot_name is empty.
-    robot_prefix = PythonExpression(
-        ["'", robot_name, "_' if '", robot_name, "' else ''"]
+    # Log info
+    log_info = LogInfo(msg=['Gazebo bringup launching with namespace: ', namespace, ', prefix: ', prefix])
+
+    # Use PushRosNamespace to apply the namespace to all nodes below
+    push_namespace = PushRosNamespace(namespace=namespace)
+
+    # Build the prefix with underscore.
+    # This expression will evaluate to, for example, "cohort1_" if
+    # the prefix is "cohort1", or to an empty string if prefix is empty.
+    prefix_ = PythonExpression(
+        ["'", prefix, "_' if '", prefix, "' else ''"]
     )
-    # Compute the prefix argument only if a robot_name/robot_prefix is provided.
-    # This expression will evaluate to, for example, "prefix:=cohort_" if
-    # robot_prefix is "cohort_", or to an empty string if robot_prefix is empty.
-    robot_prefix_arg = PythonExpression(
-        ["('prefix:=' + '", robot_prefix, "') if '", robot_prefix, "' else ''"]
+
+    # Build the namespace with slash
+    # This expression will evaluate to, for example, "cohort1/" if
+    # the namespace is "cohort1", or to an empty string if namespace is empty.
+    namespace_ = PythonExpression(
+        ["'", namespace, "/' if '", namespace, "' else ''"]
+    )
+
+    # Generate ros2_control params from template.
+    # The prefix will be substituted into the template in
+    # place of the ARCS_COHORT_PREFIX variable and the namespace will be
+    # substituted in place of ARCS_COHORT_NAMESPACE.
+    ros2_control_params_generator = ExecuteProcess(
+        condition=IfCondition(use_ros2_control_params_template),
+        cmd=[
+            [
+                "ARCS_COHORT_PREFIX='",
+                prefix_,
+                "' ",
+                "ARCS_COHORT_NAMESPACE='",
+                namespace_,
+                "' ",
+                "envsubst < ",
+                ros2_control_params_template,
+                " > ",
+                ros2_control_params,
+            ]
+        ],
+        shell=True,
+        output="screen",
     )
 
     # Robot description from Xacro, including the conditional robot name prefix.
@@ -172,10 +227,11 @@ def generate_launch_description():
         [
             "xacro ",
             PathJoinSubstitution([FindPackageShare(model_package), model_file]),
-            " ",
-            robot_prefix_arg,
-            " ",
-            "camera_resolution:=",
+            " namespace:=",
+            namespace,
+            " prefix:=",
+            prefix,
+            " camera_resolution:=",
             camera_resolution,
             " use_lidar:=",
             use_lidar,
@@ -334,7 +390,12 @@ def generate_launch_description():
         executable="parameter_bridge",
         parameters=[{"config_file": bridge_params}],
         output="screen",
-        arguments=["--ros-args", "--log-level", log_level],
+        arguments=["--ros-args", "-p", "expand_gz_topic_names:=true",
+                   "--ros-args", "--log-level", log_level],
+        remappings=[
+            ("/tf", "tf"),
+            ("/tf_static", "tf_static"),
+        ],
     )
 
     # Image bridge for left camera image
@@ -342,20 +403,29 @@ def generate_launch_description():
         name="left_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/left_camera/image", "--ros-args", "--log-level", log_level],
+        arguments=[[namespace, "/camera/left_camera/image"], "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
-            ("camera/left_camera/image", "camera/left_camera/image"),
             (
-                "camera/left_camera/image/compressed",
+                [namespace, "/camera/left_camera/image"],
+                "camera/left_camera/image",
+            ),
+            (
+                [namespace, "/camera/left_camera/image/compressed"],
                 "camera/left_camera/image/compressed",
             ),
             (
-                "camera/left_camera/image/compressedDepth",
+                [namespace, "/camera/left_camera/image/compressedDepth"],
                 "camera/left_camera/image/compressedDepth",
             ),
-            ("camera/left_camera/image/theora", "camera/left_camera/image/theora"),
-            ("camera/left_camera/image/zstd", "camera/left_camera/image/zstd"),
+            (
+                [namespace, "/camera/left_camera/image/theora"],
+                "camera/left_camera/image/theora"
+            ),
+            (
+                [namespace, "/camera/left_camera/image/zstd"],
+                "camera/left_camera/image/zstd"
+            ),
         ],
     )
 
@@ -364,20 +434,29 @@ def generate_launch_description():
         name="right_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=["camera/right_camera/image", "--ros-args", "--log-level", log_level],
+        arguments=[[namespace, "/camera/right_camera/image"], "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
-            ("camera/right_camera/image", "camera/right_camera/image"),
             (
-                "camera/right_camera/image/compressed",
+                [namespace, "/camera/right_camera/image"],
+                "camera/right_camera/image",
+            ),
+            (
+                [namespace, "/camera/right_camera/image/compressed"],
                 "camera/right_camera/image/compressed",
             ),
             (
-                "camera/right_camera/image/compressedDepth",
+                [namespace, "/camera/right_camera/image/compressedDepth"],
                 "camera/right_camera/image/compressedDepth",
             ),
-            ("camera/right_camera/image/theora", "camera/right_camera/image/theora"),
-            ("camera/right_camera/image/zstd", "camera/right_camera/image/zstd"),
+            (
+                [namespace, "/camera/right_camera/image/theora"],
+                "camera/right_camera/image/theora"
+            ),
+            (
+                [namespace, "/camera/right_camera/image/zstd"],
+                "camera/right_camera/image/zstd"
+            ),
         ],
     )
 
@@ -386,29 +465,26 @@ def generate_launch_description():
         name="left_camera_depth_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
-        arguments=[
-            "camera/left_camera/depth_image",
-            "--ros-args",
-            "--log-level",
-            log_level,
-        ],
+        arguments=[[namespace, "/camera/left_camera/depth_image"], "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
-            ("camera/left_camera/depth_image", "camera/left_camera/depth_image"),
             (
+                [namespace, "/camera/left_camera/depth_image"],
+                "camera/left_camera/depth_image"),
+            (
+                [namespace, "/camera/left_camera/depth_image/compressed"],
                 "camera/left_camera/depth_image/compressed",
-                "camera/left_camera/depth_image/compressed",
             ),
             (
+                [namespace, "/camera/left_camera/depth_image/compressedDepth"],
                 "camera/left_camera/depth_image/compressedDepth",
-                "camera/left_camera/depth_image/compressedDepth",
             ),
             (
-                "camera/left_camera/depth_image/theora",
+                [namespace, "/camera/left_camera/depth_image/theora"],
                 "camera/left_camera/depth_image/theora",
             ),
             (
-                "camera/left_camera/depth_image/zstd",
+                [namespace, "/camera/left_camera/depth_image/zstd"],
                 "camera/left_camera/depth_image/zstd",
             ),
         ],
@@ -419,39 +495,49 @@ def generate_launch_description():
             # Set gz sim resource path environment variable
             set_gz_sim_resource_path,
             # Declare launch arguments
+            declare_namespace_arg,
+            declare_prefix_arg,
+            declare_ros2_control_params_template_arg,
+            declare_ros2_control_params_arg,
             declare_world_arg,
-            declare_use_sim_time_arg,
             declare_model_package_arg,
             declare_model_file_arg,
-            declare_robot_name_arg,
             declare_camera_resolution_arg,
-            # declare_namespace_arg,
+            declare_lidar_update_rate_arg,
+            declare_log_level_arg,
+            declare_use_sim_time_arg,
             declare_use_rsp_arg,
             declare_use_jsp_arg,
             declare_use_jsp_gui_arg,
             declare_use_lidar_arg,
-            declare_lidar_update_rate_arg,
             declare_use_ros2_control_arg,
             declare_use_joystick_arg,
             declare_use_keyboard_arg,
             declare_use_navigation_arg,
-            declare_log_level_arg,
+            declare_use_ros2_control_params_template_arg,
+            # Log info
+            log_info,
+            # Param file generators
+            ros2_control_params_generator,
             # Launchers
             gazebo_launch,
             # Nodes
-            spawn_entity_node,
-            ros_gz_image_bridge_left_node,
-            ros_gz_image_bridge_right_node,
-            ros_gz_image_bridge_depth_node,
-            rsp_node,
-            jsp_node,
-            jsp_gui_node,
-            teleop_keyboard_node,
-            joy_node,
-            teleop_joy_node,
-            teleop_joy_stamper_node,
-            diff_drive_spawner_node,
-            joint_broad_spawner_node,
-            start_gazebo_ros_bridge_node,
+            GroupAction([
+                push_namespace,
+                spawn_entity_node,
+                ros_gz_image_bridge_left_node,
+                ros_gz_image_bridge_right_node,
+                ros_gz_image_bridge_depth_node,
+                rsp_node,
+                jsp_node,
+                jsp_gui_node,
+                teleop_keyboard_node,
+                joy_node,
+                teleop_joy_node,
+                teleop_joy_stamper_node,
+                diff_drive_spawner_node,
+                joint_broad_spawner_node,
+                start_gazebo_ros_bridge_node,
+            ])
         ]
     )

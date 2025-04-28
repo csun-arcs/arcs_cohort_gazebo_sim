@@ -1,7 +1,16 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
 
-    <xacro:macro name="zed_camera_description_gazebo" params="prefix camera_name=zedm camera_model=zedm resolution=VGA">
+    <xacro:macro name="zed_camera_description_gazebo" params="namespace prefix camera_name=zedm camera_model=zedm resolution=VGA">
+
+        <!-- Properties -->
+        <xacro:if value="${prefix != ''}">
+            <xacro:property name="prefix_" value="${prefix}_"/>
+        </xacro:if>
+        <xacro:if value="${prefix == ''}">
+            <xacro:property name="prefix_" value=""/>
+        </xacro:if>
+
         <xacro:if value="${resolution == 'HD2K'}">
             <xacro:property name="resolution_width" value="2208" />
             <xacro:property name="resolution_height" value="1242" />
@@ -59,15 +68,15 @@
         </xacro:if>
 
         <!-- Left Camera Gazebo -->
-        <gazebo reference="${camera_name}_left_camera_frame">
-            <sensor name="${prefix}left_camera" type="rgbd_camera">
-                <topic>camera/left_camera</topic>
-                <gz_frame_id>${camera_name}_left_camera_frame</gz_frame_id>
+        <gazebo reference="${prefix_ + camera_name}_left_camera_frame">
+            <sensor name="${prefix_}left_camera" type="rgbd_camera">
+                <topic>${namespace}/camera/left_camera</topic>
+                <gz_frame_id>${prefix_ + camera_name}_left_camera_frame</gz_frame_id>
                 <always_on>1</always_on>
                 <update_rate>${update_rate}</update_rate>
                 <visualize>true</visualize>
                 <camera>
-                    <camera_info_topic>camera/left_camera_info</camera_info_topic>
+                    <camera_info_topic>${namespace}/camera/left_camera_info</camera_info_topic>
                     <horizontal_fov>${fov}</horizontal_fov>
                     <image>
                         <format>R8G8B8</format>
@@ -83,14 +92,14 @@
         </gazebo>
 
         <!-- Right Camera Gazebo -->
-        <gazebo reference="${camera_name}_right_camera_frame">
-            <sensor name="${prefix}right_camera" type="camera">
-                <topic>camera/right_camera/image</topic>
-                <gz_frame_id>${camera_name}_right_camera_frame</gz_frame_id>
+        <gazebo reference="${prefix_ + camera_name}_right_camera_frame">
+            <sensor name="${prefix_}right_camera" type="camera">
+                <topic>${namespace}/camera/right_camera/image</topic>
+                <gz_frame_id>${prefix_ + camera_name}_right_camera_frame</gz_frame_id>
                 <visualize>true</visualize>
                 <update_rate>${update_rate}</update_rate>
                 <camera>
-                    <camera_info_topic>camera/right_camera/camera_info</camera_info_topic>
+                    <camera_info_topic>${namespace}/camera/right_camera/camera_info</camera_info_topic>
                     <horizontal_fov>${fov}</horizontal_fov>
                     <image>
                         <format>R8G8B8</format>
@@ -104,6 +113,7 @@
                 </camera>
             </sensor>
         </gazebo>
+
     </xacro:macro>
 
 </robot>

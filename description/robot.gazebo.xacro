@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
+    <xacro:arg name="namespace" default="" />
     <xacro:arg name="prefix" default="" />
     <xacro:arg name="camera_name" default="zedm" />
     <xacro:arg name="camera_model" default="zedm" />
-    <xacro:arg name="camera_resolution" default="HD720" />
+    <xacro:arg name="camera_resolution" default="VGA" />
     <xacro:arg name="use_lidar" default="false" />
     <xacro:arg name="lidar_update_rate" default="10" />
     <xacro:arg name="use_ros2_control" default="false" />
@@ -26,17 +27,17 @@
 
     <!-- Build robot model -->
     <xacro:if value="$(arg use_lidar)">
-        <xacro:lidar_description_gazebo prefix="$(arg prefix)" lidar_update_rate="$(arg lidar_update_rate)"/>
+        <xacro:lidar_description_gazebo namespace="$(arg namespace)" prefix="$(arg prefix)" lidar_update_rate="$(arg lidar_update_rate)"/>
     </xacro:if>
-    <xacro:vectornav_imu_description_gazebo prefix="$(arg prefix)"/>
-    <xacro:zed_camera_description_gazebo prefix="$(arg prefix)" camera_name="$(arg camera_name)" camera_model="$(arg camera_model)" resolution="$(arg camera_resolution)"/>
+    <xacro:vectornav_imu_description_gazebo namespace="$(arg namespace)" prefix="$(arg prefix)"/>
+    <xacro:zed_camera_description_gazebo namespace="$(arg namespace)" prefix="$(arg prefix)" camera_name="$(arg camera_name)" camera_model="$(arg camera_model)" resolution="$(arg camera_resolution)"/>
 
     <!-- Conditionally call the appropriate Gazebo plugin description -->
     <xacro:if value="$(arg use_ros2_control)">
-        <xacro:gazebo_ros2_control_plugin_description prefix="$(arg prefix)"/>
+        <xacro:gazebo_ros2_control_plugin_description namespace="$(arg namespace)" prefix="$(arg prefix)"/>
     </xacro:if>
     <xacro:unless value="$(arg use_ros2_control)">
-        <xacro:gazebo_diff_drive_plugin_description prefix="$(arg prefix)"/>
+        <xacro:gazebo_diff_drive_plugin_description namespace="$(arg namespace)" prefix="$(arg prefix)"/>
     </xacro:unless>
 
 </robot>

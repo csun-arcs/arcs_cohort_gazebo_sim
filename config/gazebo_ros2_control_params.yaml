@@ -1,5 +1,6 @@
 controller_manager:
   ros__parameters:
+    tf_frame_prefix_enable: false
     update_rate: 30
     use_sim_time: true
     diff_cont:
@@ -9,6 +10,7 @@ controller_manager:
 
 diff_cont:
   ros__parameters:
+    tf_frame_prefix_enable: false
     publish_rate: 50.0
     odom_frame_id: odom
     base_frame_id: base_link

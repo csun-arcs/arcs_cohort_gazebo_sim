@@ -1,0 +1,20 @@
+${ARCS_COHORT_NAMESPACE}controller_manager:
+  ros__parameters:
+    tf_frame_prefix_enable: false
+    update_rate: 30
+    use_sim_time: true
+    diff_cont:
+      type: diff_drive_controller/DiffDriveController
+    joint_broad:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+${ARCS_COHORT_NAMESPACE}diff_cont:
+  ros__parameters:
+    tf_frame_prefix_enable: false
+    publish_rate: 50.0
+    odom_frame_id: ${ARCS_COHORT_PREFIX}odom
+    base_frame_id: ${ARCS_COHORT_PREFIX}base_link
+    left_wheel_names: ["${ARCS_COHORT_PREFIX}front_left_wheel_joint", "${ARCS_COHORT_PREFIX}back_left_wheel_joint"]
+    right_wheel_names: ["${ARCS_COHORT_PREFIX}front_right_wheel_joint", "${ARCS_COHORT_PREFIX}back_right_wheel_joint"]
+    wheel_separation: 0.24
+    wheel_radius: 0.08
