@@ -4,6 +4,8 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
+    LogInfo,
+    GroupAction,
 )
 from launch.conditions import IfCondition
 from launch.conditions import UnlessCondition
@@ -15,7 +17,7 @@ from launch.substitutions import (
     PathJoinSubstitution,
     PythonExpression,
 )
-from launch_ros.actions import Node
+from launch_ros.actions import Node, PushRosNamespace
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -145,6 +147,12 @@ def generate_launch_description():
     use_ros2_control = LaunchConfiguration("use_ros2_control")
     use_joystick = LaunchConfiguration("use_joystick")
     use_keyboard = LaunchConfiguration("use_keyboard")
+
+    # Log info
+    log_info = LogInfo(msg=['Gazebo bringup launching with namespace: ', namespace, ', prefix: ', prefix])
+
+    # Use PushRosNamespace to apply the namespace to all nodes below
+    push_namespace = PushRosNamespace(namespace=namespace)
 
     # Robot description from Xacro, including the conditional robot name prefix.
     robot_description = Command(
@@ -433,22 +441,27 @@ def generate_launch_description():
             declare_use_joystick_arg,
             declare_use_keyboard_arg,
             declare_use_navigation_arg,
+            # Log info
+            log_info,
             # Launchers
             gazebo_launch,
             # Nodes
-            spawn_entity_node,
-            ros_gz_image_bridge_left_node,
-            ros_gz_image_bridge_right_node,
-            ros_gz_image_bridge_depth_node,
-            rsp_node,
-            jsp_node,
-            jsp_gui_node,
-            teleop_keyboard_node,
-            joy_node,
-            teleop_joy_node,
-            teleop_joy_stamper_node,
-            diff_drive_spawner_node,
-            joint_broad_spawner_node,
-            start_gazebo_ros_bridge_node,
+            GroupAction([
+                push_namespace,
+                spawn_entity_node,
+                ros_gz_image_bridge_left_node,
+                ros_gz_image_bridge_right_node,
+                ros_gz_image_bridge_depth_node,
+                rsp_node,
+                jsp_node,
+                jsp_gui_node,
+                teleop_keyboard_node,
+                joy_node,
+                teleop_joy_node,
+                teleop_joy_stamper_node,
+                diff_drive_spawner_node,
+                joint_broad_spawner_node,
+                start_gazebo_ros_bridge_node,
+            ])
         ]
     )
