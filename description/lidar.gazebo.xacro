@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
 
     <xacro:property name="PI" value="3.1415926535897931" />
-    <xacro:macro name="lidar_description_gazebo" params="prefix lidar_update_rate=30">
+    <xacro:macro name="lidar_description_gazebo" params="prefix lidar_update_rate=10">
         <!-- LiDAR Gazebo -->
         <gazebo reference="${prefix}laser_frame">
             <sensor name="laser" type="gpu_lidar">
