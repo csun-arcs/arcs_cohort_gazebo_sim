@@ -18,3 +18,4 @@ ${ARCS_COHORT_NAMESPACE}diff_cont:
     right_wheel_names: ["${ARCS_COHORT_PREFIX}front_right_wheel_joint", "${ARCS_COHORT_PREFIX}back_right_wheel_joint"]
     wheel_separation: 0.24
     wheel_radius: 0.08
+    use_stamped_vel: true
