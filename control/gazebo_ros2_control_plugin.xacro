@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <xacro:macro name="gazebo_ros2_control_plugin_description" params="namespace prefix">
+    <xacro:macro name="gazebo_ros2_control_plugin_description" params="namespace prefix ros2_control_params">
 
         <!-- Properties -->
         <xacro:if value="${prefix != ''}">
@@ -62,7 +62,7 @@
                     <remapping>/tf_static:=tf_static</remapping>
                 </ros>
                 </xacro:if>
-                <parameters>$(find arcs_cohort_gazebo_sim)/config/gazebo_ros2_control_params.yaml</parameters>
+                <parameters>$(arg ros2_control_params)</parameters>
             </plugin>
         </gazebo>
     </xacro:macro>

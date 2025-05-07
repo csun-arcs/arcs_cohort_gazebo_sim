@@ -5,8 +5,9 @@
     <xacro:arg name="camera_name" default="zedm" />
     <xacro:arg name="camera_model" default="zedm" />
     <xacro:arg name="camera_resolution" default="VGA" />
-    <xacro:arg name="use_lidar" default="false" />
     <xacro:arg name="lidar_update_rate" default="10" />
+    <xacro:arg name="ros2_control_params" default="" />
+    <xacro:arg name="use_lidar" default="false" />
     <xacro:arg name="use_ros2_control" default="false" />
     
     <!-- Include Gazebo files -->
@@ -34,7 +35,7 @@
 
     <!-- Conditionally call the appropriate Gazebo plugin description -->
     <xacro:if value="$(arg use_ros2_control)">
-        <xacro:gazebo_ros2_control_plugin_description namespace="$(arg namespace)" prefix="$(arg prefix)"/>
+        <xacro:gazebo_ros2_control_plugin_description namespace="$(arg namespace)" prefix="$(arg prefix)" ros2_control_params="$(arg ros2_control_params)"/>
     </xacro:if>
     <xacro:unless value="$(arg use_ros2_control)">
         <xacro:gazebo_diff_drive_plugin_description namespace="$(arg namespace)" prefix="$(arg prefix)"/>
