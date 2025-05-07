@@ -18,3 +18,4 @@
     right_wheel_names: ["front_right_wheel_joint", "back_right_wheel_joint"]
     wheel_separation: 0.24
     wheel_radius: 0.08
+    use_stamped_vel: true
