@@ -20,19 +20,18 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node, PushRosNamespace
 from launch_ros.substitutions import FindPackageShare
+from nav2_common.launch import ReplaceString
 
 
 def generate_launch_description():
     # Package names
     pkg_gazebo_sim = "arcs_cohort_gazebo_sim"
-    pkg_description = "arcs_cohort_description"
-    pkg_nav = "arcs_cohort_navigation"
 
     # Defaults
-    default_ros2_control_params_file_template = os.path.join(
-        get_package_share_directory(pkg_gazebo_sim), "config", "gazebo_ros2_control_params.yaml.template"
-    )
-    default_ekf_params_file = os.path.join(
+    # default_ros2_control_params_file_template = os.path.join(
+    #     get_package_share_directory(pkg_gazebo_sim), "config", "gazebo_ros2_control_params.yaml.template"
+    # )
+    default_ros2_control_params_file = os.path.join(
         get_package_share_directory(pkg_gazebo_sim), "config", "gazebo_ros2_control_params.yaml"
     )
     default_world_path = os.path.join(
@@ -40,7 +39,11 @@ def generate_launch_description():
         "worlds",
         "test_obstacles_world_1.world",
     )
-    default_model_path = "description/robot.gazebo.xacro"
+    default_model_file = os.path.join(
+        get_package_share_directory(pkg_gazebo_sim),
+        "description",
+        "robot.gazebo.xacro",
+    )
     default_joystick_params_path = os.path.join(
         get_package_share_directory(pkg_gazebo_sim),
         "config",
@@ -68,14 +71,14 @@ def generate_launch_description():
             "is set to 'cohort1'."
         ),
     )
-    declare_ros2_control_params_template_arg = DeclareLaunchArgument(
-        "ros2_control_params_template",
-        default_value=default_ros2_control_params_file_template,
-        description="Path to the params file template from which to generate the params file for ros2_control.",
-    )
+    # declare_ros2_control_params_template_arg = DeclareLaunchArgument(
+    #     "ros2_control_params_template",
+    #     default_value=default_ros2_control_params_file_template,
+    #     description="Path to the params file template from which to generate the params file for ros2_control.",
+    # )
     declare_ros2_control_params_arg = DeclareLaunchArgument(
         "ros2_control_params",
-        default_value=default_ekf_params_file,
+        default_value=default_ros2_control_params_file,
         description="Path to the params file for ros2_control.",
     )
     declare_world_arg = DeclareLaunchArgument(
@@ -83,15 +86,10 @@ def generate_launch_description():
         default_value=default_world_path,
         description="Path to the world file to load",
     )
-    declare_model_package_arg = DeclareLaunchArgument(
-        "model_package",
-        default_value=pkg_gazebo_sim,
-        description="Package containing the robot model",
-    )
     declare_model_file_arg = DeclareLaunchArgument(
         "model_file",
-        default_value=default_model_path,
-        description="Relative path to the robot model file",
+        default_value=default_model_file,
+        description="Path to the robot model file",
     )
     declare_camera_resolution_arg = DeclareLaunchArgument(
         "camera_resolution",
@@ -151,19 +149,18 @@ def generate_launch_description():
         default_value="false",
         description="Set the argument to true if you want to launch twist mux",
     )
-    declare_use_ros2_control_params_template_arg = DeclareLaunchArgument(
-        "use_ros2_control_params_template",
-        default_value="true",
-        description="If true, generate the ros2_control params from the specified ros2_control params template.",
-    )
+    # declare_use_ros2_control_params_template_arg = DeclareLaunchArgument(
+    #     "use_ros2_control_params_template",
+    #     default_value="true",
+    #     description="If true, generate the ros2_control params from the specified ros2_control params template.",
+    # )
 
     # Launch configurations
     namespace = LaunchConfiguration("namespace")
     prefix = LaunchConfiguration("prefix")
-    ros2_control_params_template = LaunchConfiguration("ros2_control_params_template")
+    # ros2_control_params_template = LaunchConfiguration("ros2_control_params_template")
     ros2_control_params = LaunchConfiguration("ros2_control_params")
     world = LaunchConfiguration("world")
-    model_package = LaunchConfiguration("model_package")
     model_file = LaunchConfiguration("model_file")
     camera_resolution = LaunchConfiguration("camera_resolution")
     lidar_update_rate = LaunchConfiguration("lidar_update_rate")
@@ -176,7 +173,7 @@ def generate_launch_description():
     use_ros2_control = LaunchConfiguration("use_ros2_control")
     use_joystick = LaunchConfiguration("use_joystick")
     use_keyboard = LaunchConfiguration("use_keyboard")
-    use_ros2_control_params_template = LaunchConfiguration("use_ros2_control_params_template")
+    # use_ros2_control_params_template = LaunchConfiguration("use_ros2_control_params_template")
 
     # Log info
     log_info = LogInfo(msg=['Gazebo bringup launching with namespace: ', namespace, ', prefix: ', prefix])
@@ -198,51 +195,72 @@ def generate_launch_description():
         ["'", namespace, "/' if '", namespace, "' else ''"]
     )
 
-    # Generate ros2_control params from template.
-    # The prefix will be substituted into the template in
-    # place of the ARCS_COHORT_PREFIX variable and the namespace will be
-    # substituted in place of ARCS_COHORT_NAMESPACE.
-    ros2_control_params_generator = ExecuteProcess(
-        condition=IfCondition(use_ros2_control_params_template),
-        cmd=[
-            [
-                "ARCS_COHORT_PREFIX='",
-                prefix_,
-                "' ",
-                "ARCS_COHORT_NAMESPACE='",
-                namespace_,
-                "' ",
-                "envsubst < ",
-                ros2_control_params_template,
-                " > ",
-                ros2_control_params,
-            ]
-        ],
-        shell=True,
-        output="screen",
+    # Build the namespace with leading and trailing slashes.
+    # This expression will evaluate to, for example, "/cohort1/" if
+    # the namespace is "cohort1", or to an empty string if namespace is empty.
+    _namespace_ = PythonExpression(
+        ["'/", namespace, "/' if '", namespace, "' else ''"]
     )
+
+    # Perform substitutions of <NAMESPACE> and <PREFIX> in EKF params file
+    substituted_ros2_control_params = ReplaceString(
+        source_file=ros2_control_params,
+        replacements={
+            '<NAMESPACE>': namespace,
+            '<NAMESPACE_>': namespace_,
+            '<_NAMESPACE_>': _namespace_,
+            '<PREFIX>': prefix,
+            '<PREFIX_>': prefix_,
+        }
+    )
+
+    # # Generate ros2_control params from template.
+    # # The prefix will be substituted into the template in
+    # # place of the ARCS_COHORT_PREFIX variable and the namespace will be
+    # # substituted in place of ARCS_COHORT_NAMESPACE.
+    # ros2_control_params_generator = ExecuteProcess(
+    #     condition=IfCondition(use_ros2_control_params_template),
+    #     cmd=[
+    #         [
+    #             "ARCS_COHORT_PREFIX='",
+    #             prefix_,
+    #             "' ",
+    #             "ARCS_COHORT_NAMESPACE='",
+    #             namespace_,
+    #             "' ",
+    #             "envsubst < ",
+    #             ros2_control_params_template,
+    #             " > ",
+    #             ros2_control_params,
+    #         ]
+    #     ],
+    #     shell=True,
+    #     output="screen",
+    # )
 
     # Robot description from Xacro, including the conditional robot name prefix.
     robot_description = Command(
         [
             "xacro ",
-            PathJoinSubstitution([FindPackageShare(model_package), model_file]),
+            model_file,
             " namespace:=",
             namespace,
             " prefix:=",
             prefix,
             " camera_resolution:=",
             camera_resolution,
-            " use_lidar:=",
-            use_lidar,
             " lidar_update_rate:=",
             lidar_update_rate,
-            " use_ros2_control:=",
-            use_ros2_control,
+            " ros2_control_params:=",
+            substituted_ros2_control_params,
             " use_joystick:=",
             use_joystick,
             " use_keyboard:=",
             use_keyboard,
+            " use_lidar:=",
+            use_lidar,
+            " use_ros2_control:=",
+            use_ros2_control,
         ]
     )
 
@@ -256,6 +274,10 @@ def generate_launch_description():
         ],
         output="screen",
         arguments=["--ros-args", "--log-level", log_level],
+        remappings=[
+            ("/tf", "tf"),
+            ("/tf_static", "tf_static"),
+        ],
     )
 
     # Joint State Publisher node
@@ -497,28 +519,27 @@ def generate_launch_description():
             # Declare launch arguments
             declare_namespace_arg,
             declare_prefix_arg,
-            declare_ros2_control_params_template_arg,
-            declare_ros2_control_params_arg,
+            # declare_ros2_control_params_template_arg,
             declare_world_arg,
-            declare_model_package_arg,
             declare_model_file_arg,
             declare_camera_resolution_arg,
             declare_lidar_update_rate_arg,
+            declare_ros2_control_params_arg,
             declare_log_level_arg,
             declare_use_sim_time_arg,
+            declare_use_lidar_arg,
             declare_use_rsp_arg,
             declare_use_jsp_arg,
             declare_use_jsp_gui_arg,
-            declare_use_lidar_arg,
             declare_use_ros2_control_arg,
             declare_use_joystick_arg,
             declare_use_keyboard_arg,
             declare_use_navigation_arg,
-            declare_use_ros2_control_params_template_arg,
+            # declare_use_ros2_control_params_template_arg,
             # Log info
             log_info,
             # Param file generators
-            ros2_control_params_generator,
+            # ros2_control_params_generator,
             # Launchers
             gazebo_launch,
             # Nodes
