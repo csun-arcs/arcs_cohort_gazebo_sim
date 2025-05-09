@@ -322,7 +322,20 @@ def generate_launch_description():
         executable="teleop_node",
         name="teleop_node",
         parameters=[default_joystick_params_path, {"use_sim_time": use_sim_time}],
-        remappings=[("cmd_vel", "diff_cont/cmd_vel")],
+        remappings=[("cmd_vel", "diff_cont/cmd_vel_joy_unstamped")],
+        arguments=["--ros-args", "--log-level", log_level],
+    )
+
+    # Twist stamper for joystick teleop node
+    teleop_joy_stamper_node = Node(
+        condition=IfCondition(PythonExpression(["'", use_joystick, "' == 'true'"])),
+        package="twist_stamper",
+        executable="twist_stamper",
+        parameters=[{"use_sim_time": use_sim_time}],
+        remappings=[
+            ("cmd_vel_in", "diff_cont/cmd_vel_joy_unstamped"),
+            ("cmd_vel_out", "diff_cont/cmd_vel"),
+        ],
         arguments=["--ros-args", "--log-level", log_level],
     )
 
@@ -542,6 +555,7 @@ def generate_launch_description():
                 teleop_keyboard_node,
                 joy_node,
                 teleop_joy_node,
+                teleop_joy_stamper_node,
                 diff_drive_spawner_node,
                 joint_broad_spawner_node,
                 start_gazebo_ros_bridge_node,
