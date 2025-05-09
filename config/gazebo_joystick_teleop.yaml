@@ -22,5 +22,5 @@ teleop_node:
 
     enable_button: 6
     enable_turbo_button: 7
-
+    publish_stamped_twist: true
     require_enable_button: true
