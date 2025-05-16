@@ -3,9 +3,10 @@
 <package format="3">
   <name>arcs_cohort_gazebo_sim</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="pikaic2010@gmail.com">arcs</maintainer>
-  <license>TODO: License declaration</license>
+  <description>The `arcs_cohort_gazebo_sim` package provides a Gazebo simulation environment for the ARCS Cohort robot, enabling users to simulate the robot's behavior in various world configurations. It integrates with ROS 2 and Gazebo to support robot control, sensor simulation (e.g., Stereolabs Zed camera, LiDAR), and teleoperation using joysticks or keyboards.</description>
+  <maintainer email="barry.ridge@csun.edu">Barry Ridge</maintainer>
+  <maintainer email="subhobrata.chakraborty@csun.edu">Subhobrata Chakraborty</maintainer>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>  
 
