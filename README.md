@@ -27,7 +27,9 @@ The following launch files are provided by this package:
 
 ## 👥 Maintainers
 
-- Barry Ridge (barry [dot] ridge [at] csun [dot] edu)- Subhobrata Chakraborty (subhobrata [dot] chakraborty [at] csun [dot] edu)
+- Barry Ridge (barry [dot] ridge [at] csun [dot] edu)
+- Subhobrata Chakraborty (subhobrata [dot] chakraborty [at] csun [dot] edu)
+
 ## 🗃️ Repository
 
 - 📁 GitHub: [csun-arcs/arcs_cohort_gazebo_sim](https://github.com/csun-arcs/arcs_cohort_gazebo_sim)
