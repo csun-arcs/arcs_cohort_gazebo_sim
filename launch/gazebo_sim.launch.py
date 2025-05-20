@@ -105,6 +105,12 @@ def generate_launch_description():
     declare_use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time", default_value="true", description="Use simulation time"
     )
+    declare_use_gazebo_arg = DeclareLaunchArgument(
+        "use_gazebo", default_value="true", description="Launch Gazebo"
+    )
+    declare_use_spawner_arg = DeclareLaunchArgument(
+        "use_spawner", default_value="true", description="Use spawn entity node to spawn robot model."
+    )
     declare_use_rsp_arg = DeclareLaunchArgument(
         "use_rsp", default_value="true", description="Launch robot_state_publisher"
     )
@@ -152,6 +158,8 @@ def generate_launch_description():
     lidar_update_rate = LaunchConfiguration("lidar_update_rate")
     log_level = LaunchConfiguration("log_level")
     use_sim_time = LaunchConfiguration("use_sim_time")
+    use_gazebo = LaunchConfiguration("use_gazebo")
+    use_spawner = LaunchConfiguration("use_spawner")
     use_rsp = LaunchConfiguration("use_rsp")
     use_jsp = LaunchConfiguration("use_jsp")
     use_jsp_gui = LaunchConfiguration("use_jsp_gui")
@@ -325,6 +333,7 @@ def generate_launch_description():
             "gz_args": ["-r -v4 ", world],
             "on_exit_shutdown": "true",
         }.items(),
+        condition=IfCondition(use_gazebo),
     )
 
     # Spawn robot into Gazebo
@@ -343,6 +352,7 @@ def generate_launch_description():
             log_level,
         ],
         output="screen",
+        condition=IfCondition(use_spawner),
     )
 
     # Differential drive controller spawner
@@ -487,6 +497,8 @@ def generate_launch_description():
             declare_ros2_control_params_arg,
             declare_log_level_arg,
             declare_use_sim_time_arg,
+            declare_use_gazebo_arg,
+            declare_use_spawner_arg,
             declare_use_lidar_arg,
             declare_use_rsp_arg,
             declare_use_jsp_arg,
