@@ -28,9 +28,6 @@ def generate_launch_description():
     pkg_gazebo_sim = "arcs_cohort_gazebo_sim"
 
     # Defaults
-    # default_ros2_control_params_file_template = os.path.join(
-    #     get_package_share_directory(pkg_gazebo_sim), "config", "gazebo_ros2_control_params.yaml.template"
-    # )
     default_ros2_control_params_file = os.path.join(
         get_package_share_directory(pkg_gazebo_sim), "config", "gazebo_ros2_control_params.yaml"
     )
@@ -71,11 +68,6 @@ def generate_launch_description():
             "is set to 'cohort1'."
         ),
     )
-    # declare_ros2_control_params_template_arg = DeclareLaunchArgument(
-    #     "ros2_control_params_template",
-    #     default_value=default_ros2_control_params_file_template,
-    #     description="Path to the params file template from which to generate the params file for ros2_control.",
-    # )
     declare_ros2_control_params_arg = DeclareLaunchArgument(
         "ros2_control_params",
         default_value=default_ros2_control_params_file,
@@ -149,16 +141,10 @@ def generate_launch_description():
         default_value="false",
         description="Set the argument to true if you want to launch twist mux",
     )
-    # declare_use_ros2_control_params_template_arg = DeclareLaunchArgument(
-    #     "use_ros2_control_params_template",
-    #     default_value="true",
-    #     description="If true, generate the ros2_control params from the specified ros2_control params template.",
-    # )
 
     # Launch configurations
     namespace = LaunchConfiguration("namespace")
     prefix = LaunchConfiguration("prefix")
-    # ros2_control_params_template = LaunchConfiguration("ros2_control_params_template")
     ros2_control_params = LaunchConfiguration("ros2_control_params")
     world = LaunchConfiguration("world")
     model_file = LaunchConfiguration("model_file")
@@ -173,7 +159,6 @@ def generate_launch_description():
     use_ros2_control = LaunchConfiguration("use_ros2_control")
     use_joystick = LaunchConfiguration("use_joystick")
     use_keyboard = LaunchConfiguration("use_keyboard")
-    # use_ros2_control_params_template = LaunchConfiguration("use_ros2_control_params_template")
 
     # Log info
     log_info = LogInfo(msg=['Gazebo bringup launching with namespace: ', namespace, ', prefix: ', prefix])
@@ -213,30 +198,6 @@ def generate_launch_description():
             '<PREFIX_>': prefix_,
         }
     )
-
-    # # Generate ros2_control params from template.
-    # # The prefix will be substituted into the template in
-    # # place of the ARCS_COHORT_PREFIX variable and the namespace will be
-    # # substituted in place of ARCS_COHORT_NAMESPACE.
-    # ros2_control_params_generator = ExecuteProcess(
-    #     condition=IfCondition(use_ros2_control_params_template),
-    #     cmd=[
-    #         [
-    #             "ARCS_COHORT_PREFIX='",
-    #             prefix_,
-    #             "' ",
-    #             "ARCS_COHORT_NAMESPACE='",
-    #             namespace_,
-    #             "' ",
-    #             "envsubst < ",
-    #             ros2_control_params_template,
-    #             " > ",
-    #             ros2_control_params,
-    #         ]
-    #     ],
-    #     shell=True,
-    #     output="screen",
-    # )
 
     # Robot description from Xacro, including the conditional robot name prefix.
     robot_description = Command(
@@ -519,7 +480,6 @@ def generate_launch_description():
             # Declare launch arguments
             declare_namespace_arg,
             declare_prefix_arg,
-            # declare_ros2_control_params_template_arg,
             declare_world_arg,
             declare_model_file_arg,
             declare_camera_resolution_arg,
@@ -535,11 +495,8 @@ def generate_launch_description():
             declare_use_joystick_arg,
             declare_use_keyboard_arg,
             declare_use_navigation_arg,
-            # declare_use_ros2_control_params_template_arg,
             # Log info
             log_info,
-            # Param file generators
-            # ros2_control_params_generator,
             # Launchers
             gazebo_launch,
             # Nodes
