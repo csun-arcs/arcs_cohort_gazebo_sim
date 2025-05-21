@@ -105,6 +105,9 @@ def generate_launch_description():
     declare_use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time", default_value="true", description="Use simulation time"
     )
+    declare_use_clock_bridge_arg = DeclareLaunchArgument(
+        "use_clock_bridge", default_value="true", description="Use Gazebo-to-ROS clock bridge"
+    )
     declare_use_gazebo_arg = DeclareLaunchArgument(
         "use_gazebo", default_value="true", description="Launch Gazebo"
     )
@@ -158,6 +161,7 @@ def generate_launch_description():
     lidar_update_rate = LaunchConfiguration("lidar_update_rate")
     log_level = LaunchConfiguration("log_level")
     use_sim_time = LaunchConfiguration("use_sim_time")
+    use_clock_bridge = LaunchConfiguration("use_clock_bridge")
     use_gazebo = LaunchConfiguration("use_gazebo")
     use_spawner = LaunchConfiguration("use_spawner")
     use_rsp = LaunchConfiguration("use_rsp")
@@ -314,7 +318,7 @@ def generate_launch_description():
         package="teleop_twist_keyboard",
         executable="teleop_twist_keyboard",
         prefix="xterm -e",
-        parameters=[{"stamped": True}],
+        parameters=[{"use_sim_time": use_sim_time, "stamped": True}],
         remappings=[("cmd_vel", "diff_cont/cmd_vel")],
     )
 
@@ -340,6 +344,7 @@ def generate_launch_description():
     spawn_entity_node = Node(
         package="ros_gz_sim",
         executable="create",
+        parameters=[{"use_sim_time": use_sim_time}],
         arguments=[
             "-topic",
             "robot_description",
@@ -360,6 +365,7 @@ def generate_launch_description():
         condition=IfCondition(use_ros2_control),
         package="controller_manager",
         executable="spawner",
+        parameters=[{"use_sim_time": use_sim_time}],
         arguments=["diff_cont", "--ros-args", "--log-level", log_level],
     )
 
@@ -368,6 +374,7 @@ def generate_launch_description():
         condition=IfCondition(use_ros2_control),
         package="controller_manager",
         executable="spawner",
+        parameters=[{"use_sim_time": use_sim_time}],
         arguments=["joint_broad", "--ros-args", "--log-level", log_level],
     )
 
@@ -376,12 +383,30 @@ def generate_launch_description():
         get_package_share_directory(pkg_gazebo_sim), "config", "gazebo_bridge.yaml"
     )
 
+    # Start the Gazebo clock bridge
+    start_gazebo_ros_clock_bridge_node = Node(
+        condition=IfCondition(use_clock_bridge),
+        name="clock_bridge",
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=[
+            "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+            "--ros-args",
+            "--log-level", log_level,
+        ],
+        output="screen",
+        remappings=[
+            ("/tf", "tf"),
+            ("/tf_static", "tf_static"),
+        ]
+    )
+
     # Start the Gazebo ROS bridge
     start_gazebo_ros_bridge_node = Node(
         name="parameter_bridge",
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        parameters=[{"config_file": bridge_params}],
+        parameters=[{"use_sim_time": use_sim_time, "config_file": bridge_params}],
         output="screen",
         arguments=["--ros-args", "-p", "expand_gz_topic_names:=true",
                    "--ros-args", "--log-level", log_level],
@@ -396,6 +421,7 @@ def generate_launch_description():
         name="left_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
+        parameters=[{"use_sim_time": use_sim_time}],
         arguments=[[namespace, "/camera/left_camera/image"], "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
@@ -427,6 +453,7 @@ def generate_launch_description():
         name="right_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
+        parameters=[{"use_sim_time": use_sim_time}],
         arguments=[[namespace, "/camera/right_camera/image"], "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
@@ -458,6 +485,7 @@ def generate_launch_description():
         name="left_camera_depth_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
+        parameters=[{"use_sim_time": use_sim_time}],
         arguments=[[namespace, "/camera/left_camera/depth_image"], "--ros-args", "--log-level", log_level],
         output="screen",
         remappings=[
@@ -497,6 +525,7 @@ def generate_launch_description():
             declare_ros2_control_params_arg,
             declare_log_level_arg,
             declare_use_sim_time_arg,
+            declare_use_clock_bridge_arg,
             declare_use_gazebo_arg,
             declare_use_spawner_arg,
             declare_use_lidar_arg,
@@ -527,6 +556,7 @@ def generate_launch_description():
                 teleop_joy_stamper_node,
                 diff_drive_spawner_node,
                 joint_broad_spawner_node,
+                start_gazebo_ros_clock_bridge_node,
                 start_gazebo_ros_bridge_node,
             ])
         ]
