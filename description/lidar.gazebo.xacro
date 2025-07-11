@@ -18,7 +18,7 @@
             <sensor name="laser" type="gpu_lidar">
                 <pose> 0 0 0 0 0 0 </pose>
                 <visualize>false</visualize>
-                <update_rate>$(arg lidar_update_rate)</update_rate>
+                <update_rate>${lidar_update_rate}</update_rate>
                 <topic>${namespace}/lidar/scan</topic>
                 <gz_frame_id>laser_frame</gz_frame_id>
                 <lidar>
