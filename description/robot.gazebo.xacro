@@ -7,6 +7,7 @@
     <xacro:arg name="camera_resolution" default="VGA" />
     <xacro:arg name="lidar_update_rate" default="10" />
     <xacro:arg name="ros2_control_params" default="" />
+    <xacro:arg name="use_camera" default="true" />
     <xacro:arg name="use_lidar" default="false" />
     <xacro:arg name="use_ros2_control" default="false" />
     
@@ -16,7 +17,9 @@
         <xacro:include filename="$(find arcs_cohort_gazebo_sim)/description/lidar.gazebo.xacro"/>
     </xacro:if>
     <xacro:include filename="$(find arcs_cohort_gazebo_sim)/description/vectornav_imu.gazebo.xacro"/>
-    <xacro:include filename="$(find arcs_cohort_gazebo_sim)/description/zed_camera.gazebo.xacro"/>
+    <xacro:if value="$(arg use_camera)">
+        <xacro:include filename="$(find arcs_cohort_gazebo_sim)/description/zed_camera.gazebo.xacro"/>
+    </xacro:if>
 
     <!-- Include Gazebo plugins -->
     <xacro:if value="$(arg use_ros2_control)">
@@ -31,7 +34,9 @@
         <xacro:lidar_description_gazebo namespace="$(arg namespace)" prefix="$(arg prefix)" lidar_update_rate="$(arg lidar_update_rate)"/>
     </xacro:if>
     <xacro:vectornav_imu_description_gazebo namespace="$(arg namespace)" prefix="$(arg prefix)"/>
-    <xacro:zed_camera_description_gazebo namespace="$(arg namespace)" prefix="$(arg prefix)" camera_name="$(arg camera_name)" camera_model="$(arg camera_model)" resolution="$(arg camera_resolution)"/>
+    <xacro:if value="$(arg use_camera)">
+        <xacro:zed_camera_description_gazebo namespace="$(arg namespace)" prefix="$(arg prefix)" camera_name="$(arg camera_name)" camera_model="$(arg camera_model)" resolution="$(arg camera_resolution)"/>
+    </xacro:if>
 
     <!-- Conditionally call the appropriate Gazebo plugin description -->
     <xacro:if value="$(arg use_ros2_control)">
