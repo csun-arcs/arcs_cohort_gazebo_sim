@@ -125,6 +125,11 @@ def generate_launch_description():
         default_value="false",
         description="Launch joint_state_publisher_gui",
     )
+    declare_use_camera_arg = DeclareLaunchArgument(
+        "use_camera",
+        default_value="true",
+        description="If true, include the camera in the robot description",
+    )
     declare_use_lidar_arg = DeclareLaunchArgument(
         "use_lidar",
         default_value="false",
@@ -167,6 +172,7 @@ def generate_launch_description():
     use_rsp = LaunchConfiguration("use_rsp")
     use_jsp = LaunchConfiguration("use_jsp")
     use_jsp_gui = LaunchConfiguration("use_jsp_gui")
+    use_camera = LaunchConfiguration("use_camera")
     use_lidar = LaunchConfiguration("use_lidar")
     use_ros2_control = LaunchConfiguration("use_ros2_control")
     use_joystick = LaunchConfiguration("use_joystick")
@@ -230,6 +236,8 @@ def generate_launch_description():
             use_joystick,
             " use_keyboard:=",
             use_keyboard,
+            " use_camera:=",
+            use_camera,
             " use_lidar:=",
             use_lidar,
             " use_ros2_control:=",
@@ -418,6 +426,7 @@ def generate_launch_description():
 
     # Image bridge for left camera image
     ros_gz_image_bridge_left_node = Node(
+        condition=IfCondition(use_camera),
         name="left_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
@@ -450,6 +459,7 @@ def generate_launch_description():
 
     # Image bridge for right camera image
     ros_gz_image_bridge_right_node = Node(
+        condition=IfCondition(use_camera),
         name="right_camera_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
@@ -482,6 +492,7 @@ def generate_launch_description():
 
     # Image bridge for left camera depth image
     ros_gz_image_bridge_depth_node = Node(
+        condition=IfCondition(use_camera),
         name="left_camera_depth_image_bridge",
         package="ros_gz_image",
         executable="image_bridge",
@@ -528,6 +539,7 @@ def generate_launch_description():
             declare_use_clock_bridge_arg,
             declare_use_gazebo_arg,
             declare_use_spawner_arg,
+            declare_use_camera_arg,
             declare_use_lidar_arg,
             declare_use_rsp_arg,
             declare_use_jsp_arg,
