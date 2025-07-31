@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Define a macro with a prefix param for the Zed M camera description -->
+  <xacro:macro name="robot1_gazebo_diff_drive_plugin_description" params="namespace prefix">
+
+    <!-- Properties -->
+    <xacro:if value="${prefix != ''}">
+      <xacro:property name="prefix_" value="${prefix}_"/>
+    </xacro:if>
+    <xacro:if value="${prefix == ''}">
+      <xacro:property name="prefix_" value=""/>
+    </xacro:if>
+
+    <gazebo>
+        <plugin name="ignition::gazebo::systems::DiffDrive" filename="libignition-gazebo-diff-drive-system.so">
+            <left_joint>${prefix_}front_left_wheel_joint</left_joint>
+            <right_joint>${prefix_}front_right_wheel_joint</right_joint>
+            <left_joint>${prefix_}back_left_wheel_joint</left_joint>
+            <right_joint>${prefix_}back_right_wheel_joint</right_joint>
+
+            <wheel_separation>0.18</wheel_separation>
+            <wheel_radius>0.08</wheel_radius>
+
+            <max_linear_acceleration>0.1</max_linear_acceleration>
+
+            <topic>$(arg namespace)/cmd_vel</topic>
+
+            <odom_topic>$(arg namespace)/odom</odom_topic>
+            <frame_id>${prefix_}odom</frame_id>
+            <child_frame_id>${prefix_}base_link</child_frame_id>
+            <odom_publisher_frequency>30</odom_publisher_frequency>
+            <tf_topic>$(arg namespace)/tf</tf_topic>
+        </plugin>
+
+        <plugin filename="gz-sim-joint-state-publisher-system"
+            name="gz::sim::systems::JointStatePublisher">
+            <topic>$(arg namespace)/joint_states</topic>
+            <joint_name>${prefix_}front_left_wheel_joint</joint_name>
+            <joint_name>${prefix_}front_right_wheel_joint</joint_name>
+            <joint_name>${prefix_}back_left_wheel_joint</joint_name>
+            <joint_name>${prefix_}back_right_wheel_joint</joint_name>
+        </plugin>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

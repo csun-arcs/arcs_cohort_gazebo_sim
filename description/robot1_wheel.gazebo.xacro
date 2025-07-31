@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
+
+    <xacro:macro name="wheel_description_gazebo" params="namespace prefix">
+
+        <!-- Properties -->
+        <xacro:if value="${prefix != ''}">
+            <xacro:property name="prefix_" value="${prefix}_"/>
+        </xacro:if>
+        <xacro:if value="${prefix == ''}">
+            <xacro:property name="prefix_" value=""/>
+        </xacro:if>
+
+        <xacro:property name="PI" value="3.1415926535897931" />
+
+        <gazebo reference="${prefix_}front_left_wheel_link">
+			<mu1 value="1.0"/>
+			<mu2 value="1.0"/>
+			
+		</gazebo>
+
+        <gazebo reference="${prefix_}front_rightt_wheel_link">
+			<mu1 value="1.0"/>
+			<mu2 value="1.0"/>
+			
+		</gazebo>
+
+        <gazebo reference="${prefix_}back_left_wheel_link">
+			<mu1 value="1.0"/>
+			<mu2 value="1.0"/>
+			
+		</gazebo>
+
+        <gazebo reference="${prefix_}back_right_wheel_link">
+			<mu1 value="1.0"/>
+			<mu2 value="1.0"/>
+			
+		</gazebo>
+    </xacro:macro>
+
+</robot>

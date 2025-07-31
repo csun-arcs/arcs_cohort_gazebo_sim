@@ -32,7 +32,7 @@ def generate_launch_description():
     #     get_package_share_directory(pkg_gazebo_sim), "config", "gazebo_ros2_control_params.yaml.template"
     # )
     default_ros2_control_params_file = os.path.join(
-        get_package_share_directory(pkg_gazebo_sim), "config", "gazebo_ros2_control_params.yaml"
+        get_package_share_directory(pkg_gazebo_sim), "config", "robot1_gazebo_ros2_control_params.yaml"
     )
     default_world_path = os.path.join(
         get_package_share_directory(pkg_gazebo_sim),
@@ -42,7 +42,7 @@ def generate_launch_description():
     default_model_file = os.path.join(
         get_package_share_directory(pkg_gazebo_sim),
         "description",
-        "robot.gazebo.xacro",
+        "robot1.gazebo.xacro",
     )
     default_joystick_params_path = os.path.join(
         get_package_share_directory(pkg_gazebo_sim),
